@@ -48,7 +48,7 @@ class Window(QWidget):
         layout.addWidget(titlebar)
 
         content = QWidget()
-        content.setStyleSheet("background:rgba(0,0,0,100);")
+        content.setStyleSheet("background:rgba(0,0,0,50);")
         content.setMouseTracking(True)
         cl = QVBoxLayout(content)
         cl.setContentsMargins(20, 20, 20, 20)
