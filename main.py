@@ -1,7 +1,8 @@
 from PyQt6.QtWidgets import QApplication, QWidget, QPushButton, QHBoxLayout, QVBoxLayout, QLabel
-from PyQt6.QtCore import Qt, QRect
+from PyQt6.QtCore import Qt, QRect, QPropertyAnimation, QEasingCurve
+from PyQt6.QtGui import QIcon
 from BlurWindow.blurWindow import blur
-import ctypes, sys
+import ctypes, sys, os
 
 
 class Window(QWidget):
@@ -9,30 +10,83 @@ class Window(QWidget):
 
     def __init__(self):
         super().__init__()
-        self.resize(400, 300)
-        self.setMinimumSize(200, 150)
+        self.setWindowTitle("Spectra")
+        if os.path.exists("icon.png"):
+            self.setWindowIcon(QIcon("icon.png"))
+        self.resize(600, 400)
+        self.setMinimumSize(400, 300)
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setMouseTracking(True)
         blur(self.winId())
         ctypes.windll.dwmapi.DwmSetWindowAttribute(int(self.winId()), 33, ctypes.byref(ctypes.c_int(2)), 4)
 
-        layout = QVBoxLayout(self)
+        layout = QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
+        # 侧边栏
+        self.sidebar = QWidget()
+        self.sidebar.setFixedWidth(50)
+        self.sidebar.setStyleSheet("background:rgba(0,0,0,80);")
+        self.sidebar.setMouseTracking(True)
+        self.sidebar_expanded = False
+
+        sb = QVBoxLayout(self.sidebar)
+        sb.setContentsMargins(5, 10, 5, 10)
+        sb.setSpacing(5)
+
+        # 标题
+        self.title_label = QLabel("Spectra")
+        self.title_label.setStyleSheet("color:white;background:transparent;font-size:14px;padding-left:5px;")
+        self.title_label.setMouseTracking(True)
+        self.title_label.setFixedHeight(30)
+        self.title_label.hide()
+        sb.addWidget(self.title_label)
+
+        # 占位
+        self.spacer = QWidget()
+        self.spacer.setFixedHeight(30)
+        self.spacer.setStyleSheet("background:transparent;")
+        sb.addWidget(self.spacer)
+
+        # 菜单按钮
+        menu_btn = QPushButton("☰")
+        menu_btn.setFixedHeight(40)
+        menu_btn.setMouseTracking(True)
+        menu_btn.setStyleSheet(
+            "QPushButton{background:transparent;color:white;border:none;border-radius:8px;font-size:18px;text-align:left;padding-left:10px;}QPushButton:hover{background:rgba(255,255,255,0.2);}")
+        menu_btn.clicked.connect(self.toggle_sidebar)
+        sb.addWidget(menu_btn)
+
+        sb.addStretch()
+
+        # 配置按钮
+        self.config_btn = QPushButton("⚙")
+        self.config_btn.setFixedHeight(40)
+        self.config_btn.setMouseTracking(True)
+        self.config_btn.setStyleSheet(
+            "QPushButton{background:transparent;color:white;border:none;border-radius:8px;font-size:18px;text-align:left;padding-left:10px;}QPushButton:hover{background:rgba(255,255,255,0.2);}")
+        sb.addWidget(self.config_btn)
+
+        layout.addWidget(self.sidebar)
+
+        # 右侧区域
+        right = QWidget()
+        right.setStyleSheet("background:rgba(0,0,0,100);")
+        right.setMouseTracking(True)
+        right_layout = QVBoxLayout(right)
+        right_layout.setContentsMargins(0, 0, 0, 0)
+        right_layout.setSpacing(0)
+
+        # 标题栏
         titlebar = QWidget()
         titlebar.setFixedHeight(40)
-        titlebar.setStyleSheet("background:rgba(0,0,0,100);")
+        titlebar.setStyleSheet("background:transparent;")
         titlebar.setMouseTracking(True)
         tb = QHBoxLayout(titlebar)
-        tb.setContentsMargins(12, 0, 8, 0)
+        tb.setContentsMargins(0, 0, 8, 0)
         tb.setSpacing(0)
-
-        title = QLabel("示例程序")
-        title.setStyleSheet("color:white;background:transparent;")
-        title.setMouseTracking(True)
-        tb.addWidget(title)
         tb.addStretch()
 
         for t, s in [("−", self.showMinimized), ("×", self.close)]:
@@ -45,23 +99,45 @@ class Window(QWidget):
             b.clicked.connect(s)
             tb.addWidget(b)
 
-        layout.addWidget(titlebar)
+        right_layout.addWidget(titlebar)
 
+        # 内容区
         content = QWidget()
-        content.setStyleSheet("background:rgba(0,0,0,100);")
+        content.setStyleSheet("background:transparent;")
         content.setMouseTracking(True)
-        cl = QVBoxLayout(content)
-        cl.setContentsMargins(20, 20, 20, 20)
+        right_layout.addWidget(content, 1)
 
-        btn = QPushButton("测试按钮")
-        btn.setMouseTracking(True)
-        btn.setStyleSheet(
-            "QPushButton{background:transparent;color:#0078d4;border:2px solid #0078d4;border-radius:8px;padding:15px;font-size:14px;}QPushButton:hover{background:rgba(0,120,212,0.1);}QPushButton:pressed{background:rgba(0,120,212,0.2);}")
-        cl.addWidget(btn)
+        layout.addWidget(right, 1)
 
-        layout.addWidget(content, 1)
         self.drag_pos = None
         self.resize_edge = None
+
+    def toggle_sidebar(self):
+        self.anim = QPropertyAnimation(self.sidebar, b"minimumWidth")
+        self.anim2 = QPropertyAnimation(self.sidebar, b"maximumWidth")
+        self.anim.setDuration(200)
+        self.anim2.setDuration(200)
+        self.anim.setEasingCurve(QEasingCurve.Type.InOutQuad)
+        self.anim2.setEasingCurve(QEasingCurve.Type.InOutQuad)
+        if self.sidebar_expanded:
+            self.anim.setStartValue(150)
+            self.anim.setEndValue(50)
+            self.anim2.setStartValue(150)
+            self.anim2.setEndValue(50)
+            self.config_btn.setText("⚙")
+            self.title_label.hide()
+            self.spacer.show()
+        else:
+            self.anim.setStartValue(50)
+            self.anim.setEndValue(150)
+            self.anim2.setStartValue(50)
+            self.anim2.setEndValue(150)
+            self.config_btn.setText("⚙  配置")
+            self.title_label.show()
+            self.spacer.hide()
+        self.anim.start()
+        self.anim2.start()
+        self.sidebar_expanded = not self.sidebar_expanded
 
     def get_edge(self, pos):
         x, y, w, h, e = pos.x(), pos.y(), self.width(), self.height(), self.EDGE
@@ -83,7 +159,7 @@ class Window(QWidget):
                 self.resize_edge = edge
                 self.resize_start = ev.globalPosition().toPoint()
                 self.resize_geo = self.geometry()
-            elif ev.position().y() < 40:
+            elif ev.position().y() < 40 and ev.position().x() > self.sidebar.width():
                 self.drag_pos = ev.globalPosition().toPoint() - self.pos()
 
     def mouseMoveEvent(self, ev):
