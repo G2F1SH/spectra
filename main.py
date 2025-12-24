@@ -51,22 +51,22 @@ class Window(QWidget):
         sb.addWidget(self.spacer)
 
         # 菜单按钮
-        menu_btn = QPushButton("☰")
+        menu_btn = QPushButton("\uE700")
         menu_btn.setFixedHeight(40)
         menu_btn.setMouseTracking(True)
         menu_btn.setStyleSheet(
-            "QPushButton{background:transparent;color:white;border:none;border-radius:8px;font-size:18px;text-align:left;padding-left:10px;}QPushButton:hover{background:rgba(255,255,255,0.2);}")
+            "QPushButton{background:transparent;color:white;border:none;border-radius:8px;font-size:16px;font-family:'Segoe Fluent Icons';text-align:left;padding-left:12px;}QPushButton:hover{background:rgba(255,255,255,0.2);}")
         menu_btn.clicked.connect(self.toggle_sidebar)
         sb.addWidget(menu_btn)
 
         sb.addStretch()
 
         # 配置按钮
-        self.config_btn = QPushButton("⚙")
+        self.config_btn = QPushButton("\uE713")
         self.config_btn.setFixedHeight(40)
         self.config_btn.setMouseTracking(True)
         self.config_btn.setStyleSheet(
-            "QPushButton{background:transparent;color:white;border:none;border-radius:8px;font-size:18px;text-align:left;padding-left:10px;}QPushButton:hover{background:rgba(255,255,255,0.2);}")
+            "QPushButton{background:transparent;color:white;border:none;border-radius:8px;font-size:16px;font-family:'Segoe Fluent Icons';text-align:left;padding-left:12px;}QPushButton:hover{background:rgba(255,255,255,0.2);}")
         sb.addWidget(self.config_btn)
 
         layout.addWidget(self.sidebar)
@@ -124,7 +124,7 @@ class Window(QWidget):
             self.anim.setEndValue(50)
             self.anim2.setStartValue(150)
             self.anim2.setEndValue(50)
-            self.config_btn.setText("⚙")
+            self.config_btn.setText("\uE713")
             self.title_label.hide()
             self.spacer.show()
         else:
@@ -132,7 +132,7 @@ class Window(QWidget):
             self.anim.setEndValue(150)
             self.anim2.setStartValue(50)
             self.anim2.setEndValue(150)
-            self.config_btn.setText("⚙  配置")
+            self.config_btn.setText("\uE713  配置")
             self.title_label.show()
             self.spacer.hide()
         self.anim.start()
