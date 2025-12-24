@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import QApplication, QWidget, QPushButton, QHBoxLayout, QVBoxLayout, QLabel
 from PyQt6.QtCore import Qt, QRect, QPropertyAnimation, QEasingCurve
-from PyQt6.QtGui import QIcon, QPixmap
+from PyQt6.QtGui import QIcon
 from BlurWindow.blurWindow import blur
 import ctypes, sys, os
 
@@ -33,32 +33,29 @@ class Window(QWidget):
         self.sidebar_expanded = False
 
         sb = QVBoxLayout(self.sidebar)
-        sb.setContentsMargins(5, 10, 5, 10)
-        sb.setSpacing(5)
 
-        # 标题（图标+文字）
+        # 标题
         title_widget = QWidget()
         title_widget.setFixedSize(130, 30)
         title_widget.setStyleSheet("background:transparent;")
+        title_widget.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
         title_layout = QHBoxLayout(title_widget)
-        title_layout.setContentsMargins(3, 0, 0, 0)
-        title_layout.setSpacing(8)
+        title_layout.setContentsMargins(0, 0, 0, 0)
+        title_layout.setSpacing(0)
 
-        logo = QLabel()
-        logo.setFixedSize(20, 20)
-        logo.setStyleSheet("background:transparent;")
-        logo.setScaledContents(True)
-        if os.path.exists("icon.png"):
-            logo.setPixmap(QPixmap("icon.png"))
-        title_layout.addWidget(logo)
+        title_spacer = QWidget()
+        title_spacer.setFixedWidth(35)
+        title_layout.addWidget(title_spacer)
 
         self.title_label = QLabel("Spectra")
         self.title_label.setStyleSheet("color:white;background:transparent;font-size:14px;font-family:'微软雅黑';")
-        self.title_label.hide()
+        self.title_label.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
         title_layout.addWidget(self.title_label)
         title_layout.addStretch()
 
         sb.addWidget(title_widget)
+        sb.setContentsMargins(5, 10, 5, 10)
+        sb.setSpacing(5)
 
         # 菜单按钮
         self.menu_btn = QPushButton()
@@ -73,18 +70,21 @@ class Window(QWidget):
         menu_inner = QWidget()
         menu_inner.setFixedWidth(130)
         menu_inner.setStyleSheet("background:transparent;")
+        menu_inner.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
         menu_layout = QHBoxLayout(menu_inner)
-        menu_layout.setContentsMargins(8, 0, 8, 0)
+        menu_layout.setContentsMargins(5, 0, 5, 0)
         menu_layout.setSpacing(12)
 
         menu_icon = QLabel("\uE700")
         menu_icon.setFixedSize(20, 20)
         menu_icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
         menu_icon.setStyleSheet("color:white;background:transparent;font-size:16px;font-family:'Segoe Fluent Icons';")
+        menu_icon.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
         menu_layout.addWidget(menu_icon)
 
         self.menu_text = QLabel("菜单")
         self.menu_text.setStyleSheet("color:white;background:transparent;font-size:14px;font-family:'微软雅黑';")
+        self.menu_text.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
         self.menu_text.hide()
         menu_layout.addWidget(self.menu_text)
         menu_layout.addStretch()
@@ -108,18 +108,21 @@ class Window(QWidget):
         config_inner = QWidget()
         config_inner.setFixedWidth(130)
         config_inner.setStyleSheet("background:transparent;")
+        config_inner.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
         config_layout = QHBoxLayout(config_inner)
-        config_layout.setContentsMargins(8, 0, 8, 0)
+        config_layout.setContentsMargins(5, 0, 5, 0)
         config_layout.setSpacing(12)
 
         config_icon = QLabel("\uE713")
         config_icon.setFixedSize(20, 20)
         config_icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
         config_icon.setStyleSheet("color:white;background:transparent;font-size:16px;font-family:'Segoe Fluent Icons';")
+        config_icon.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
         config_layout.addWidget(config_icon)
 
         self.config_text = QLabel("配置")
         self.config_text.setStyleSheet("color:white;background:transparent;font-size:14px;font-family:'微软雅黑';")
+        self.config_text.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
         self.config_text.hide()
         config_layout.addWidget(self.config_text)
         config_layout.addStretch()
@@ -184,13 +187,12 @@ class Window(QWidget):
             self.anim.setEndValue(40)
             self.anim2.setStartValue(140)
             self.anim2.setEndValue(40)
-            self.anim.finished.connect(lambda: (self.title_label.hide(), self.menu_text.hide(), self.config_text.hide()))
+            self.anim.finished.connect(lambda: (self.menu_text.hide(), self.config_text.hide()))
         else:
             self.anim.setStartValue(40)
             self.anim.setEndValue(140)
             self.anim2.setStartValue(40)
             self.anim2.setEndValue(140)
-            self.title_label.show()
             self.menu_text.show()
             self.config_text.show()
         self.anim.start()
