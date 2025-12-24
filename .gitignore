@@ -2,3 +2,4 @@
 /main.spec
 /dist
 /.venv/
+/config.json
