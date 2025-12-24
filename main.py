@@ -38,7 +38,7 @@ class Window(QWidget):
 
         # 标题
         self.title_label = QLabel("Spectra")
-        self.title_label.setStyleSheet("color:white;background:transparent;font-size:14px;padding-left:5px;")
+        self.title_label.setStyleSheet("color:white;background:transparent;font-size:14px;font-family:'微软雅黑';padding-left:5px;")
         self.title_label.setMouseTracking(True)
         self.title_label.setFixedHeight(30)
         self.title_label.hide()
@@ -55,7 +55,7 @@ class Window(QWidget):
         menu_btn.setFixedHeight(40)
         menu_btn.setMouseTracking(True)
         menu_btn.setStyleSheet(
-            "QPushButton{background:transparent;color:white;border:none;border-radius:8px;font-size:16px;font-family:'Segoe Fluent Icons';text-align:left;padding-left:12px;}QPushButton:hover{background:rgba(255,255,255,0.2);}")
+            "QPushButton{background:transparent;color:white;border:none;border-radius:8px;font-size:16px;font-family:'微软雅黑','Segoe Fluent Icons';text-align:left;padding-left:12px;}QPushButton:hover{background:rgba(255,255,255,0.2);}")
         menu_btn.clicked.connect(self.toggle_sidebar)
         sb.addWidget(menu_btn)
 
@@ -66,7 +66,7 @@ class Window(QWidget):
         self.config_btn.setFixedHeight(40)
         self.config_btn.setMouseTracking(True)
         self.config_btn.setStyleSheet(
-            "QPushButton{background:transparent;color:white;border:none;border-radius:8px;font-size:16px;font-family:'Segoe Fluent Icons';text-align:left;padding-left:12px;}QPushButton:hover{background:rgba(255,255,255,0.2);}")
+            "QPushButton{background:transparent;color:white;border:none;border-radius:8px;font-size:16px;font-family:'微软雅黑','Segoe Fluent Icons';text-align:left;padding-left:12px;padding-top:-3px;}QPushButton:hover{background:rgba(255,255,255,0.2);}")
         sb.addWidget(self.config_btn)
 
         layout.addWidget(self.sidebar)
@@ -95,7 +95,7 @@ class Window(QWidget):
             b.setAttribute(Qt.WidgetAttribute.WA_Hover, True)
             b.setMouseTracking(True)
             b.setStyleSheet(
-                "QPushButton{background:transparent;color:white;border:none;border-radius:16px;font-size:16px;}QPushButton:hover{background:rgba(255,255,255,0.2);}")
+                "QPushButton{background:transparent;color:white;border:none;border-radius:16px;font-size:16px;font-family:'微软雅黑';}QPushButton:hover{background:rgba(255,255,255,0.2);}")
             b.clicked.connect(s)
             tb.addWidget(b)
 
