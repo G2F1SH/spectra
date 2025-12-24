@@ -1,21 +1,25 @@
 from PyQt6.QtWidgets import QApplication, QWidget, QPushButton, QHBoxLayout, QVBoxLayout, QLabel, QStylePainter, QStyleOptionButton, QStackedWidget
-from PyQt6.QtCore import Qt, QRect, QPropertyAnimation, QEasingCurve, pyqtProperty
+from PyQt6.QtCore import Qt, QRect, QPropertyAnimation, QEasingCurve
 from PyQt6.QtGui import QIcon, QPainter
 from BlurWindow.blurWindow import blur
 import ctypes, sys, os
 
+STYLE_BTN = "QPushButton{background:transparent;border:none;border-radius:8px;}QPushButton:hover{background:rgba(255,255,255,0.2);}"
+STYLE_BTN_ACTIVE = "QPushButton{background:rgba(255,255,255,0.15);border:none;border-radius:8px;}QPushButton:hover{background:rgba(255,255,255,0.1);}"
+STYLE_ICON = "color:white;background:transparent;font-size:16px;font-family:'Segoe Fluent Icons';"
+STYLE_TEXT = "color:white;background:transparent;font-size:14px;font-family:'微软雅黑';"
+
 
 class JellyButton(QPushButton):
-    def __init__(self, parent=None):
-        super().__init__(parent)
+    def __init__(self, text="", parent=None):
+        super().__init__(text, parent)
         self._scale = 1.0
+        self.setMouseTracking(True)
 
-    @pyqtProperty(float)
-    def scale(self):
+    def getScale(self):
         return self._scale
 
-    @scale.setter
-    def scale(self, s):
+    def setScale(self, s):
         self._scale = s
         self.update()
 
@@ -30,23 +34,35 @@ class JellyButton(QPushButton):
         self.initStyleOption(opt)
         painter.drawControl(self.style().ControlElement.CE_PushButton, opt)
 
-    def mousePressEvent(self, ev):
-        self.anim = QPropertyAnimation(self, b"scale")
-        self.anim.setDuration(100)
-        self.anim.setStartValue(1.0)
-        self.anim.setEndValue(0.92)
-        self.anim.setEasingCurve(QEasingCurve.Type.OutQuad)
+    def _animate(self, end, duration, curve):
+        self.anim = QPropertyAnimation()
+        self.anim.setDuration(duration)
+        self.anim.setStartValue(self._scale)
+        self.anim.setEndValue(end)
+        self.anim.setEasingCurve(curve)
+        self.anim.valueChanged.connect(self.setScale)
         self.anim.start()
+
+    def mousePressEvent(self, ev):
+        self._animate(0.92, 100, QEasingCurve.Type.OutQuad)
         super().mousePressEvent(ev)
 
     def mouseReleaseEvent(self, ev):
-        self.anim = QPropertyAnimation(self, b"scale")
-        self.anim.setDuration(150)
-        self.anim.setStartValue(self._scale)
-        self.anim.setEndValue(1.0)
-        self.anim.setEasingCurve(QEasingCurve.Type.OutBack)
-        self.anim.start()
+        self._animate(1.0, 150, QEasingCurve.Type.OutBack)
         super().mouseReleaseEvent(ev)
+
+    def mouseMoveEvent(self, ev):
+        win = self.window()
+        if hasattr(win, 'update_cursor'):
+            win.update_cursor(ev.globalPosition().toPoint())
+        super().mouseMoveEvent(ev)
+
+
+def make_transparent(widget):
+    widget.setStyleSheet("background:transparent;")
+    widget.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+    widget.setMouseTracking(True)
+    return widget
 
 
 class Window(QWidget):
@@ -71,148 +87,35 @@ class Window(QWidget):
 
         # 侧边栏
         self.sidebar = QWidget()
-        self.sidebar.setFixedWidth(40)
+        self.sidebar.setFixedWidth(50)
         self.sidebar.setStyleSheet("background:rgba(0,0,0,80);")
         self.sidebar.setMouseTracking(True)
         self.sidebar_expanded = False
+        self.nav_texts = []
+        self.nav_indicators = []
 
         sb = QVBoxLayout(self.sidebar)
-        sb.setContentsMargins(5, 10, 5, 10)
+        sb.setContentsMargins(2, 10, 5, 10)
         sb.setSpacing(5)
 
         # 标题
-        title_widget = QWidget()
-        title_widget.setFixedSize(130, 30)
-        title_widget.setStyleSheet("background:transparent;")
-        title_widget.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
-        title_layout = QHBoxLayout(title_widget)
-        title_layout.setContentsMargins(0, 0, 0, 0)
-        title_layout.setSpacing(0)
+        title = make_transparent(QWidget())
+        title.setFixedSize(133, 30)
+        tl = QHBoxLayout(title)
+        tl.setContentsMargins(48, 0, 0, 0)
+        lbl = QLabel("Spectra")
+        lbl.setStyleSheet(STYLE_TEXT)
+        lbl.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+        lbl.setMouseTracking(True)
+        tl.addWidget(lbl)
+        tl.addStretch()
+        sb.addWidget(title)
 
-        title_spacer = QWidget()
-        title_spacer.setFixedWidth(35)
-        title_layout.addWidget(title_spacer)
-
-        self.title_label = QLabel("Spectra")
-        self.title_label.setStyleSheet("color:white;background:transparent;font-size:14px;font-family:'微软雅黑';")
-        self.title_label.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
-        title_layout.addWidget(self.title_label)
-        title_layout.addStretch()
-
-        sb.addWidget(title_widget)
-
-        # 菜单按钮
-        self.menu_btn = JellyButton()
-        self.menu_btn.setFixedHeight(40)
-        self.menu_btn.setMouseTracking(True)
-        self.menu_btn.setStyleSheet(
-            "QPushButton{background:transparent;border:none;border-radius:8px;}QPushButton:hover{background:rgba(255,255,255,0.2);}")
-        self.menu_btn.clicked.connect(self.toggle_sidebar)
-
-        menu_outer = QHBoxLayout(self.menu_btn)
-        menu_outer.setContentsMargins(0, 0, 0, 0)
-        menu_inner = QWidget()
-        menu_inner.setFixedWidth(130)
-        menu_inner.setStyleSheet("background:transparent;")
-        menu_inner.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
-        menu_layout = QHBoxLayout(menu_inner)
-        menu_layout.setContentsMargins(5, 0, 5, 0)
-        menu_layout.setSpacing(12)
-
-        menu_icon = QLabel("\uE700")
-        menu_icon.setFixedSize(20, 20)
-        menu_icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        menu_icon.setStyleSheet("color:white;background:transparent;font-size:16px;font-family:'Segoe Fluent Icons';")
-        menu_icon.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
-        menu_layout.addWidget(menu_icon)
-
-        self.menu_text = QLabel("菜单")
-        self.menu_text.setStyleSheet("color:white;background:transparent;font-size:14px;font-family:'微软雅黑';")
-        self.menu_text.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
-        self.menu_text.hide()
-        menu_layout.addWidget(self.menu_text)
-        menu_layout.addStretch()
-
-        menu_outer.addWidget(menu_inner)
-        menu_outer.addStretch()
-
-        sb.addWidget(self.menu_btn)
-
-        # 主页按钮
-        self.home_btn = JellyButton()
-        self.home_btn.setFixedHeight(40)
-        self.home_btn.setMouseTracking(True)
-        self.home_btn.setStyleSheet(
-            "QPushButton{background:transparent;border:none;border-radius:8px;}QPushButton:hover{background:rgba(255,255,255,0.2);}")
-        self.home_btn.clicked.connect(lambda: self.stack.setCurrentIndex(0))
-
-        home_outer = QHBoxLayout(self.home_btn)
-        home_outer.setContentsMargins(0, 0, 0, 0)
-        home_inner = QWidget()
-        home_inner.setFixedWidth(130)
-        home_inner.setStyleSheet("background:transparent;")
-        home_inner.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
-        home_layout = QHBoxLayout(home_inner)
-        home_layout.setContentsMargins(5, 0, 5, 0)
-        home_layout.setSpacing(12)
-
-        home_icon = QLabel("\uE80F")
-        home_icon.setFixedSize(20, 20)
-        home_icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        home_icon.setStyleSheet("color:white;background:transparent;font-size:16px;font-family:'Segoe Fluent Icons';")
-        home_icon.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
-        home_layout.addWidget(home_icon)
-
-        self.home_text = QLabel("主页")
-        self.home_text.setStyleSheet("color:white;background:transparent;font-size:14px;font-family:'微软雅黑';")
-        self.home_text.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
-        self.home_text.hide()
-        home_layout.addWidget(self.home_text)
-        home_layout.addStretch()
-
-        home_outer.addWidget(home_inner)
-        home_outer.addStretch()
-
-        sb.addWidget(self.home_btn)
-
+        # 导航按钮
+        sb.addWidget(self.create_nav_btn("\uE700", "菜单", self.toggle_sidebar))
+        sb.addWidget(self.create_nav_btn("\uE80F", "主页", lambda: self.switch_page(0), 0))
         sb.addStretch()
-
-        # 配置按钮
-        self.config_btn = JellyButton()
-        self.config_btn.setFixedHeight(40)
-        self.config_btn.setMouseTracking(True)
-        self.config_btn.setStyleSheet(
-            "QPushButton{background:transparent;border:none;border-radius:8px;}QPushButton:hover{background:rgba(255,255,255,0.2);}")
-        self.config_btn.clicked.connect(lambda: self.stack.setCurrentIndex(1))
-
-        config_outer = QHBoxLayout(self.config_btn)
-        config_outer.setContentsMargins(0, 0, 0, 0)
-        config_inner = QWidget()
-        config_inner.setFixedWidth(130)
-        config_inner.setStyleSheet("background:transparent;")
-        config_inner.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
-        config_layout = QHBoxLayout(config_inner)
-        config_layout.setContentsMargins(5, 0, 5, 0)
-        config_layout.setSpacing(12)
-
-        config_icon = QLabel("\uE713")
-        config_icon.setFixedSize(20, 20)
-        config_icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        config_icon.setStyleSheet("color:white;background:transparent;font-size:16px;font-family:'Segoe Fluent Icons';")
-        config_icon.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
-        config_layout.addWidget(config_icon)
-
-        self.config_text = QLabel("配置")
-        self.config_text.setStyleSheet("color:white;background:transparent;font-size:14px;font-family:'微软雅黑';")
-        self.config_text.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
-        self.config_text.hide()
-        config_layout.addWidget(self.config_text)
-        config_layout.addStretch()
-
-        config_outer.addWidget(config_inner)
-        config_outer.addStretch()
-
-        sb.addWidget(self.config_btn)
+        sb.addWidget(self.create_nav_btn("\uE713", "设置", lambda: self.switch_page(1), 1))
 
         layout.addWidget(self.sidebar)
 
@@ -220,9 +123,9 @@ class Window(QWidget):
         right = QWidget()
         right.setStyleSheet("background:rgba(0,0,0,100);")
         right.setMouseTracking(True)
-        right_layout = QVBoxLayout(right)
-        right_layout.setContentsMargins(0, 0, 0, 0)
-        right_layout.setSpacing(0)
+        rl = QVBoxLayout(right)
+        rl.setContentsMargins(0, 0, 0, 0)
+        rl.setSpacing(0)
 
         # 标题栏
         titlebar = QWidget()
@@ -231,73 +134,118 @@ class Window(QWidget):
         titlebar.setMouseTracking(True)
         tb = QHBoxLayout(titlebar)
         tb.setContentsMargins(0, 0, 8, 0)
-        tb.setSpacing(0)
         tb.addStretch()
-
         for t, s in [("−", self.showMinimized), ("×", self.close)]:
-            b = JellyButton(t)
-            b.setFixedSize(32, 32)
-            b.setAttribute(Qt.WidgetAttribute.WA_Hover, True)
-            b.setMouseTracking(True)
-            b.setStyleSheet(
-                "QPushButton{background:transparent;color:white;border:none;border-radius:16px;font-size:16px;font-family:'微软雅黑';}QPushButton:hover{background:rgba(255,255,255,0.2);}")
-            b.clicked.connect(s)
-            tb.addWidget(b)
+            tb.addWidget(self.create_title_btn(t, s))
+        rl.addWidget(titlebar)
 
-        right_layout.addWidget(titlebar)
-
-        # 内容区（使用 QStackedWidget）
+        # 内容区
         self.stack = QStackedWidget()
         self.stack.setStyleSheet("background:transparent;")
-
-        # 主页
-        home_page = QWidget()
-        home_page.setStyleSheet("background:transparent;")
-        self.stack.addWidget(home_page)
-
-        # 配置页
-        config_page = QWidget()
-        config_page.setStyleSheet("background:transparent;")
-        config_page_layout = QVBoxLayout(config_page)
-        config_page_layout.setContentsMargins(20, 10, 20, 20)
-        config_page_layout.setSpacing(15)
-
-        config_title = QLabel("应用设置")
-        config_title.setStyleSheet("color:white;font-size:20px;font-family:'微软雅黑';font-weight:bold;")
-        config_page_layout.addWidget(config_title)
-
-        config_page_layout.addStretch()
-
-        self.stack.addWidget(config_page)
-
-        right_layout.addWidget(self.stack, 1)
+        self.stack.addWidget(QWidget())  # 主页
+        self.stack.addWidget(self.create_config_page())
+        rl.addWidget(self.stack, 1)
 
         layout.addWidget(right, 1)
 
         self.drag_pos = None
         self.resize_edge = None
+        self.switch_page(0)
+
+    def create_nav_btn(self, icon, text, handler, page_index=None):
+        container = QWidget()
+        container.setFixedHeight(40)
+        container.setStyleSheet("background:transparent;")
+        container.setMouseTracking(True)
+        cl = QHBoxLayout(container)
+        cl.setContentsMargins(0, 0, 0, 0)
+        cl.setSpacing(0)
+
+        btn = JellyButton()
+        btn.setFixedHeight(40)
+        btn.setStyleSheet(STYLE_BTN)
+        btn.clicked.connect(handler)
+
+        outer = QHBoxLayout(btn)
+        outer.setContentsMargins(0, 0, 0, 0)
+        outer.setSpacing(0)
+
+        indicator = QWidget()
+        indicator.setFixedSize(3, 18)
+        indicator.setStyleSheet("background:transparent;border-radius:1px;")
+        indicator.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+        outer.addWidget(indicator, 0, Qt.AlignmentFlag.AlignVCenter)
+        if page_index is not None:
+            self.nav_indicators.append((page_index, indicator, btn))
+
+        inner = make_transparent(QWidget())
+        inner.setFixedWidth(125)
+        il = QHBoxLayout(inner)
+        il.setContentsMargins(7, 0, 5, 0)
+        il.setSpacing(12)
+
+        icon_lbl = QLabel(icon)
+        icon_lbl.setFixedSize(20, 20)
+        icon_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        icon_lbl.setStyleSheet(STYLE_ICON)
+        icon_lbl.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+        icon_lbl.setMouseTracking(True)
+        il.addWidget(icon_lbl)
+
+        text_lbl = QLabel(text)
+        text_lbl.setStyleSheet(STYLE_TEXT)
+        text_lbl.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+        text_lbl.setMouseTracking(True)
+        text_lbl.hide()
+        il.addWidget(text_lbl)
+        il.addStretch()
+        self.nav_texts.append(text_lbl)
+
+        outer.addWidget(inner)
+        outer.addStretch()
+        cl.addWidget(btn)
+        return container
+
+    def create_title_btn(self, text, handler):
+        b = JellyButton(text)
+        b.setFixedSize(32, 32)
+        b.setStyleSheet("QPushButton{background:transparent;color:white;border:none;border-radius:16px;font-size:16px;font-family:'微软雅黑';}QPushButton:hover{background:rgba(255,255,255,0.2);}")
+        b.clicked.connect(handler)
+        return b
+
+    def create_config_page(self):
+        page = QWidget()
+        page.setStyleSheet("background:transparent;")
+        pl = QVBoxLayout(page)
+        pl.setContentsMargins(20, 10, 20, 20)
+        lbl = QLabel("设置")
+        lbl.setStyleSheet("color:white;font-size:20px;font-family:'微软雅黑';font-weight:bold;")
+        pl.addWidget(lbl)
+        pl.addStretch()
+        return page
+
+    def switch_page(self, index):
+        self.stack.setCurrentIndex(index)
+        for i, ind, btn in self.nav_indicators:
+            if i == index:
+                ind.setStyleSheet("background:#a0a0ff;border-radius:1px;")
+                btn.setStyleSheet(STYLE_BTN_ACTIVE)
+            else:
+                ind.setStyleSheet("background:transparent;border-radius:1px;")
+                btn.setStyleSheet(STYLE_BTN)
 
     def toggle_sidebar(self):
         self.anim = QPropertyAnimation(self.sidebar, b"minimumWidth")
         self.anim2 = QPropertyAnimation(self.sidebar, b"maximumWidth")
-        self.anim.setDuration(200)
-        self.anim2.setDuration(200)
-        self.anim.setEasingCurve(QEasingCurve.Type.InOutQuad)
-        self.anim2.setEasingCurve(QEasingCurve.Type.InOutQuad)
+        for a in (self.anim, self.anim2):
+            a.setDuration(200)
+            a.setEasingCurve(QEasingCurve.Type.InOutQuad)
+            a.setStartValue(140 if self.sidebar_expanded else 50)
+            a.setEndValue(50 if self.sidebar_expanded else 140)
         if self.sidebar_expanded:
-            self.anim.setStartValue(140)
-            self.anim.setEndValue(40)
-            self.anim2.setStartValue(140)
-            self.anim2.setEndValue(40)
-            self.anim.finished.connect(lambda: (self.menu_text.hide(), self.home_text.hide(), self.config_text.hide()))
+            self.anim.finished.connect(lambda: [t.hide() for t in self.nav_texts])
         else:
-            self.anim.setStartValue(40)
-            self.anim.setEndValue(140)
-            self.anim2.setStartValue(40)
-            self.anim2.setEndValue(140)
-            self.menu_text.show()
-            self.home_text.show()
-            self.config_text.show()
+            [t.show() for t in self.nav_texts]
         self.anim.start()
         self.anim2.start()
         self.sidebar_expanded = not self.sidebar_expanded
@@ -305,15 +253,20 @@ class Window(QWidget):
     def get_edge(self, pos):
         x, y, w, h, e = pos.x(), pos.y(), self.width(), self.height(), self.EDGE
         edge = ""
-        if y < e:
-            edge += "t"
-        elif y > h - e:
-            edge += "b"
-        if x < e:
-            edge += "l"
-        elif x > w - e:
-            edge += "r"
+        if y < e: edge += "t"
+        elif y > h - e: edge += "b"
+        if x < e: edge += "l"
+        elif x > w - e: edge += "r"
         return edge
+
+    def update_cursor(self, global_pos):
+        local_pos = self.mapFromGlobal(global_pos)
+        edge = self.get_edge(local_pos)
+        cursors = {"t": Qt.CursorShape.SizeVerCursor, "b": Qt.CursorShape.SizeVerCursor,
+                   "l": Qt.CursorShape.SizeHorCursor, "r": Qt.CursorShape.SizeHorCursor,
+                   "tl": Qt.CursorShape.SizeFDiagCursor, "br": Qt.CursorShape.SizeFDiagCursor,
+                   "tr": Qt.CursorShape.SizeBDiagCursor, "bl": Qt.CursorShape.SizeBDiagCursor}
+        self.setCursor(cursors.get(edge, Qt.CursorShape.ArrowCursor))
 
     def mousePressEvent(self, ev):
         if ev.button() == Qt.MouseButton.LeftButton:
@@ -338,12 +291,7 @@ class Window(QWidget):
         elif self.drag_pos:
             self.move(ev.globalPosition().toPoint() - self.drag_pos)
         else:
-            edge = self.get_edge(ev.position().toPoint())
-            cursors = {"t": Qt.CursorShape.SizeVerCursor, "b": Qt.CursorShape.SizeVerCursor,
-                       "l": Qt.CursorShape.SizeHorCursor, "r": Qt.CursorShape.SizeHorCursor,
-                       "tl": Qt.CursorShape.SizeFDiagCursor, "br": Qt.CursorShape.SizeFDiagCursor,
-                       "tr": Qt.CursorShape.SizeBDiagCursor, "bl": Qt.CursorShape.SizeBDiagCursor}
-            self.setCursor(cursors.get(edge, Qt.CursorShape.ArrowCursor))
+            self.update_cursor(ev.globalPosition().toPoint())
 
     def mouseReleaseEvent(self, ev):
         self.drag_pos = None
