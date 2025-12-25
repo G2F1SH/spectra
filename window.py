@@ -47,7 +47,12 @@ class Window(QWidget):
 
         # 定时器轮询光标位置
         self.cursor_timer = QTimer()
-        self.cursor_timer.timeout.connect(lambda: self.update_cursor(QCursor.pos()))
+        def update_cursor_safe():
+            try:
+                self.update_cursor(QCursor.pos())
+            except:
+                pass
+        self.cursor_timer.timeout.connect(update_cursor_safe)
         self.cursor_timer.start(50)
 
         # 应用保存的配置
@@ -111,13 +116,27 @@ class Window(QWidget):
             home_icon if home_icon else "\uE80F", "主页",
             lambda: self.switch_page(0), 0, "svg/houses.svg", "svg/houses-fill.svg"
         ))
+
+        instance_icon = load_svg_icon("svg/kanban.svg")
+        instance_icon_active = load_svg_icon("svg/kanban-fill.svg")
+        sb.addWidget(self.ui_builder.create_nav_btn(
+            instance_icon if instance_icon else "\uE7A8", "实例",
+            lambda: self.switch_page(1), 1, "svg/kanban.svg", "svg/kanban-fill.svg"
+        ))
+
+        download_icon = load_svg_icon("svg/arrow-down-circle.svg")
+        download_icon_active = load_svg_icon("svg/arrow-down-circle-fill.svg")
+        sb.addWidget(self.ui_builder.create_nav_btn(
+            download_icon if download_icon else "\uE7A8", "下载",
+            lambda: self.switch_page(2), 2, "svg/arrow-down-circle.svg", "svg/arrow-down-circle-fill.svg"
+        ))
         sb.addStretch()
 
         settings_icon = load_svg_icon("svg/gear.svg")
         settings_icon_active = load_svg_icon("svg/gear-fill.svg")
         sb.addWidget(self.ui_builder.create_nav_btn(
             settings_icon if settings_icon else "\uE713", "设置",
-            lambda: self.switch_page(1), 1, "svg/gear.svg", "svg/gear-fill.svg"
+            lambda: self.switch_page(3), 3, "svg/gear.svg", "svg/gear-fill.svg"
         ))
 
         self.layout().addWidget(self.sidebar)
@@ -148,6 +167,8 @@ class Window(QWidget):
         self.stack = QStackedWidget()
         self.stack.setStyleSheet("background:transparent;")
         self.stack.addWidget(QWidget())
+        self.stack.addWidget(self.ui_builder.create_instance_page())
+        self.stack.addWidget(self.ui_builder.create_download_page())
         self.stack.addWidget(self.ui_builder.create_config_page())
         rl.addWidget(self.stack, 1)
 

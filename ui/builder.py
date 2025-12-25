@@ -258,6 +258,36 @@ class UIBuilder:
         pl.addStretch()
         return page
 
+    def create_instance_page(self):
+        """创建实例页面"""
+        page = QWidget()
+        page.setStyleSheet("background:transparent;")
+        pl = QVBoxLayout(page)
+        pl.setContentsMargins(20, 10, 20, 20)
+        pl.setSpacing(15)
+
+        title = QLabel("实例")
+        title.setStyleSheet("color:white;font-size:20px;font-family:'微软雅黑';font-weight:bold;")
+        pl.addWidget(title)
+
+        pl.addStretch()
+        return page
+
+    def create_download_page(self):
+        """创建下载页面"""
+        page = QWidget()
+        page.setStyleSheet("background:transparent;")
+        pl = QVBoxLayout(page)
+        pl.setContentsMargins(20, 10, 20, 20)
+        pl.setSpacing(15)
+
+        title = QLabel("下载")
+        title.setStyleSheet("color:white;font-size:20px;font-family:'微软雅黑';font-weight:bold;")
+        pl.addWidget(title)
+
+        pl.addStretch()
+        return page
+
     def _create_opacity_slider(self):
         """创建透明度滑块"""
         self.window.opacity_widget = QWidget()
