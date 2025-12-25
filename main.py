@@ -10,9 +10,9 @@ if sys.platform == 'win32':
 os.environ["QT_LOGGING_RULES"] = "qt.multimedia*=false"
 
 from PyQt6.QtWidgets import QApplication, QWidget, QPushButton, QHBoxLayout, QVBoxLayout, QLabel, QStylePainter, \
-    QStyleOptionButton, QStackedWidget, QFileDialog, QLineEdit
-from PyQt6.QtCore import Qt, QRect, QPropertyAnimation, QEasingCurve, QUrl, QSizeF
-from PyQt6.QtGui import QIcon, QPainter, QPixmap, QCursor
+    QStyleOptionButton, QStackedWidget, QFileDialog, QLineEdit, QSplashScreen
+from PyQt6.QtCore import Qt, QRect, QPropertyAnimation, QEasingCurve, QUrl, QSizeF, QSize, QTimer
+from PyQt6.QtGui import QIcon, QPainter, QPixmap, QCursor, QIconEngine, QColor, QImage
 from PyQt6.QtMultimedia import QMediaPlayer, QAudioOutput
 from BlurWindow.blurWindow import blur
 import ctypes, sys, json
@@ -123,6 +123,33 @@ def make_transparent(widget):
     return widget
 
 
+class SplashScreen(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.setFixedSize(256, 256)
+        self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint)
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        self.setWindowModality(Qt.WindowModality.ApplicationModal)
+
+        # 居中显示
+        screen = QApplication.primaryScreen()
+        screen_geometry = screen.availableGeometry()
+        x = (screen_geometry.width() - self.width()) // 2
+        y = (screen_geometry.height() - self.height()) // 2
+        self.move(x, y)
+
+        # 显示icon
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+
+        if os.path.exists("icon.png"):
+            icon_label = QLabel()
+            icon_pixmap = QPixmap("icon.png")
+            icon_label.setPixmap(icon_pixmap.scaled(256, 256, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
+            icon_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            layout.addWidget(icon_label)
+
+
 class Window(QWidget):
     EDGE = 8
 
@@ -139,8 +166,6 @@ class Window(QWidget):
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setMouseTracking(True)
-        blur(self.winId())
-        ctypes.windll.dwmapi.DwmSetWindowAttribute(int(self.winId()), 33, ctypes.byref(ctypes.c_int(2)), 4)
 
         layout = QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -174,9 +199,12 @@ class Window(QWidget):
 
         # 导航按钮
         sb.addWidget(self.create_nav_btn("\uE700", "菜单", self.toggle_sidebar))
-        sb.addWidget(self.create_nav_btn("\uE80F", "主页", lambda: self.switch_page(0), 0))
+        sb.addWidget(self.create_nav_btn("\uE80F", "主页", lambda: self.switch_page(0), 0, None, None))
         sb.addStretch()
-        sb.addWidget(self.create_nav_btn("\uE713", "设置", lambda: self.switch_page(1), 1))
+        # 加载SVG图标
+        settings_icon = self.load_svg_icon("svg/x-diamond.svg")
+        settings_icon_active = self.load_svg_icon("svg/x-diamond-fill.svg")
+        sb.addWidget(self.create_nav_btn(settings_icon if settings_icon else "\uE713", "设置", lambda: self.switch_page(1), 1, "svg/x-diamond.svg", "svg/x-diamond-fill.svg"))
 
         layout.addWidget(self.sidebar)
 
@@ -241,12 +269,16 @@ class Window(QWidget):
         self.cursor_timer.timeout.connect(lambda: self.update_cursor(QCursor.pos()))
         self.cursor_timer.start(50)  # 每 50ms 更新一次
 
-        self.show()
-
         # 应用保存的配置
         if self.config["background_mode"] == "image" and self.config["background_image_path"]:
             if os.path.exists(self.config["background_image_path"]):
                 self.set_background_image(self.config["background_image_path"])
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        # 应用窗口效果（必须在窗口显示后调用）
+        blur(self.winId())
+        ctypes.windll.dwmapi.DwmSetWindowAttribute(int(self.winId()), 33, ctypes.byref(ctypes.c_int(2)), 4)
 
     def load_config(self):
         try:
@@ -270,7 +302,25 @@ class Window(QWidget):
         with open(self.config_file, 'w', encoding='utf-8') as f:
             json.dump(self.config, f, ensure_ascii=False, indent=2)
 
-    def create_nav_btn(self, icon, text, handler, page_index=None):
+    def load_svg_icon(self, path):
+        """加载SVG图标为QPixmap，并渲染为白色"""
+        svg_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), path.replace('\\', os.sep))
+        if os.path.exists(svg_path):
+            # 加载SVG为QPixmap
+            pixmap = QPixmap(svg_path)
+            if not pixmap.isNull():
+                # 将 pixmap 转换为 QImage
+                image = pixmap.toImage()
+                # 遍历每个像素，将非透明像素设置为白色
+                for y in range(image.height()):
+                    for x in range(image.width()):
+                        color = image.pixelColor(x, y)
+                        if color.alpha() > 0:
+                            image.setPixelColor(x, y, QColor(255, 255, 255, color.alpha()))
+                return QPixmap.fromImage(image)
+        return None
+
+    def create_nav_btn(self, icon, text, handler, page_index=None, icon_path=None, icon_path_active=None):
         container = QWidget()
         container.setFixedHeight(40)
         container.setStyleSheet("background:transparent;")
@@ -294,7 +344,7 @@ class Window(QWidget):
         indicator.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
         outer.addWidget(indicator, 0, Qt.AlignmentFlag.AlignVCenter)
         if page_index is not None:
-            self.nav_indicators.append((page_index, indicator, btn))
+            self.nav_indicators.append((page_index, indicator, btn, icon_path, icon_path_active, container))
 
         inner = make_transparent(QWidget())
         inner.setFixedWidth(125)
@@ -302,12 +352,21 @@ class Window(QWidget):
         il.setContentsMargins(7, 0, 5, 0)
         il.setSpacing(12)
 
-        icon_lbl = QLabel(icon)
+        icon_lbl = QLabel()
         icon_lbl.setFixedSize(20, 20)
         icon_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        icon_lbl.setStyleSheet(STYLE_ICON)
+        icon_lbl.setStyleSheet("background:transparent;")
         icon_lbl.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
         icon_lbl.setMouseTracking(True)
+        icon_lbl.setObjectName("nav_icon")
+
+        # 支持SVG图标
+        if isinstance(icon, QPixmap):
+            icon_lbl.setPixmap(icon.scaled(20, 20, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
+        else:
+            icon_lbl.setText(icon)
+            icon_lbl.setStyleSheet(STYLE_ICON)
+
         il.addWidget(icon_lbl)
 
         text_lbl = QLabel(text)
@@ -652,13 +711,36 @@ class Window(QWidget):
 
     def switch_page(self, index):
         self.stack.setCurrentIndex(index)
-        for i, ind, btn in self.nav_indicators:
+        for item in self.nav_indicators:
+            if len(item) == 3:
+                i, ind, btn = item
+                icon_path, icon_path_active = None, None
+                container = None
+            else:
+                i, ind, btn, icon_path, icon_path_active, container = item
+
             if i == index:
                 ind.setStyleSheet("background:#a0a0ff;border-radius:1px;")
                 btn.setStyleSheet(STYLE_BTN_ACTIVE)
+
+                # 更新图标为填充状态
+                if icon_path_active and container:
+                    icon_pixmap = self.load_svg_icon(icon_path_active)
+                    if icon_pixmap:
+                        icon_lbl = container.findChild(QLabel, "nav_icon")
+                        if icon_lbl:
+                            icon_lbl.setPixmap(icon_pixmap.scaled(20, 20, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
             else:
                 ind.setStyleSheet("background:transparent;border-radius:1px;")
                 btn.setStyleSheet(STYLE_BTN)
+
+                # 恢复图标为正常状态
+                if icon_path and container:
+                    icon_pixmap = self.load_svg_icon(icon_path)
+                    if icon_pixmap:
+                        icon_lbl = container.findChild(QLabel, "nav_icon")
+                        if icon_lbl:
+                            icon_lbl.setPixmap(icon_pixmap.scaled(20, 20, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
 
     def toggle_sidebar(self):
         self.anim = QPropertyAnimation(self.sidebar, b"minimumWidth")
@@ -739,7 +821,23 @@ class Window(QWidget):
             self.save_config()
 
 
-app = QApplication(sys.argv)
-window = Window()
-window.show()
-sys.exit(app.exec())
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+
+    # 创建并显示启动画面
+    splash = SplashScreen()
+    splash.show()
+
+    # 创建主窗口但不显示
+    window = Window()
+
+    # 2秒后关闭启动画面并显示主窗口
+    def show_main_window():
+        splash.close()
+        window.show()
+        window.raise_()
+        window.activateWindow()
+
+    QTimer.singleShot(2000, show_main_window)
+
+    sys.exit(app.exec())
