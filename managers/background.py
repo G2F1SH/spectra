@@ -50,8 +50,11 @@ class BackgroundManager:
             # 只在首次加载或路径改变时重新加载视频
             if self.current_video_path != path:
                 self.player.setSource(QUrl.fromLocalFile(path))
-                self.player.play()
                 self.current_video_path = path
+
+            # 确保视频在播放状态（修复切换背景后黑屏问题）
+            if self.player.playbackState() != QMediaPlayer.PlaybackState.PlayingState:
+                self.player.play()
 
             # 使用固定 16:9 比例计算
             video_w, video_h = 1920, 1080
