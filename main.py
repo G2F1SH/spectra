@@ -126,7 +126,7 @@ def make_transparent(widget):
 class SplashScreen(QWidget):
     def __init__(self):
         super().__init__()
-        self.setFixedSize(256, 256)
+        self.setFixedSize(179, 179)
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setWindowModality(Qt.WindowModality.ApplicationModal)
@@ -145,7 +145,7 @@ class SplashScreen(QWidget):
         if os.path.exists("icon.png"):
             icon_label = QLabel()
             icon_pixmap = QPixmap("icon.png")
-            icon_label.setPixmap(icon_pixmap.scaled(256, 256, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
+            icon_label.setPixmap(icon_pixmap.scaled(179, 179, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
             icon_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
             layout.addWidget(icon_label)
 
@@ -179,6 +179,10 @@ class Window(QWidget):
         self.sidebar_expanded = False
         self.nav_texts = []
         self.nav_indicators = []
+        # 菜单按钮图标信息
+        self.menu_icon_path = "svg/chevron-bar-right.svg"
+        self.menu_icon_path_active = "svg/chevron-bar-left.svg"
+        self.menu_icon_label = None
 
         sb = QVBoxLayout(self.sidebar)
         sb.setContentsMargins(2, 10, 5, 10)
@@ -198,13 +202,19 @@ class Window(QWidget):
         sb.addWidget(title)
 
         # 导航按钮
-        sb.addWidget(self.create_nav_btn("\uE700", "菜单", self.toggle_sidebar))
-        sb.addWidget(self.create_nav_btn("\uE80F", "主页", lambda: self.switch_page(0), 0, None, None))
+        menu_icon = self.load_svg_icon("svg/chevron-bar-right.svg")
+        menu_icon_active = self.load_svg_icon("svg/chevron-bar-left.svg")
+        menu_btn_container = self.create_nav_btn(menu_icon if menu_icon else "\uE700", "菜单", self.toggle_sidebar, None, "svg/chevron-bar-right.svg", "svg/chevron-bar-left.svg")
+        self.menu_icon_label = menu_btn_container.findChild(QLabel, "nav_icon")
+        sb.addWidget(menu_btn_container)
+        home_icon = self.load_svg_icon("svg/houses.svg")
+        home_icon_active = self.load_svg_icon("svg/houses-fill.svg")
+        sb.addWidget(self.create_nav_btn(home_icon if home_icon else "\uE80F", "主页", lambda: self.switch_page(0), 0, "svg/houses.svg", "svg/houses-fill.svg"))
         sb.addStretch()
         # 加载SVG图标
-        settings_icon = self.load_svg_icon("svg/x-diamond.svg")
-        settings_icon_active = self.load_svg_icon("svg/x-diamond-fill.svg")
-        sb.addWidget(self.create_nav_btn(settings_icon if settings_icon else "\uE713", "设置", lambda: self.switch_page(1), 1, "svg/x-diamond.svg", "svg/x-diamond-fill.svg"))
+        settings_icon = self.load_svg_icon("svg/gear.svg")
+        settings_icon_active = self.load_svg_icon("svg/gear-fill.svg")
+        sb.addWidget(self.create_nav_btn(settings_icon if settings_icon else "\uE713", "设置", lambda: self.switch_page(1), 1, "svg/gear.svg", "svg/gear-fill.svg"))
 
         layout.addWidget(self.sidebar)
 
@@ -403,7 +413,7 @@ class Window(QWidget):
         pl.addWidget(title)
 
         # 外观设置容器（主卡片）
-        self.appearance_container, self.appearance_arrow = self.create_expandable_menu("外观设置", "背景、主题等外观选项")
+        self.appearance_container = self.create_expandable_menu("外观设置", "背景、主题等外观选项", "svg/palette.svg", "svg/palette-fill.svg")
         pl.addWidget(self.appearance_container)
 
         # 获取内容区域
@@ -448,11 +458,12 @@ class Window(QWidget):
         self.appearance_content_layout.addWidget(self.path_widget)
         self.path_widget.setVisible(self.config["background_mode"] == "image")
 
+
         # 初始状态：默认不展开
         self.appearance_content.setVisible(False)
-        self.appearance_arrow.setText("▶")
 
         pl.addStretch()
+
 
         return page
 
@@ -500,7 +511,7 @@ class Window(QWidget):
         card.radio = radio
         return card
 
-    def create_expandable_menu(self, title, desc):
+    def create_expandable_menu(self, title, desc, icon_path=None, icon_path_active=None):
         # 主容器
         container = QWidget()
         container.setStyleSheet("background:rgba(255,255,255,0.08);border-radius:8px;")
@@ -521,13 +532,21 @@ class Window(QWidget):
         header_layout.setContentsMargins(15, 12, 15, 12)
         header_layout.setSpacing(12)
 
-        # 箭头图标
-        arrow = QLabel("▶")
-        arrow.setFixedSize(16, 16)
-        arrow.setStyleSheet("color:white;background:transparent;font-size:12px;")
-        arrow.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
-        arrow.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        header_layout.addWidget(arrow, 0, Qt.AlignmentFlag.AlignTop)
+        # 图标（如果提供）
+        icon_label = None
+        if icon_path:
+            icon_label = QLabel()
+            icon_label.setFixedSize(20, 20)
+            icon_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            icon_label.setStyleSheet("background:transparent;")
+            icon_label.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+            icon_label.setObjectName("menu_icon")
+
+            icon_pixmap = self.load_svg_icon(icon_path)
+            if icon_pixmap:
+                icon_label.setPixmap(icon_pixmap.scaled(20, 20, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
+
+            header_layout.addWidget(icon_label, 0, Qt.AlignmentFlag.AlignTop)
 
         # 标题和描述
         text_layout = QVBoxLayout()
@@ -561,7 +580,12 @@ class Window(QWidget):
 
         main_layout.addWidget(content_widget)
 
-        return container, arrow
+        # 保存图标路径和active路径，以便后续切换
+        self.appearance_icon_path = icon_path
+        self.appearance_icon_path_active = icon_path_active
+        self.appearance_icon_label = icon_label
+
+        return container
 
     def toggle_appearance_menu(self):
         content = self.appearance_container.layout().itemAt(1).widget()
@@ -569,10 +593,18 @@ class Window(QWidget):
 
         if is_visible:
             content.setVisible(False)
-            self.appearance_arrow.setText("▶")
+            # 切换图标为普通状态
+            if self.appearance_icon_label and self.appearance_icon_path:
+                icon_pixmap = self.load_svg_icon(self.appearance_icon_path)
+                if icon_pixmap:
+                    self.appearance_icon_label.setPixmap(icon_pixmap.scaled(20, 20, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
         else:
             content.setVisible(True)
-            self.appearance_arrow.setText("▼")
+            # 切换图标为填充状态
+            if self.appearance_icon_label and self.appearance_icon_path_active:
+                icon_pixmap = self.load_svg_icon(self.appearance_icon_path_active)
+                if icon_pixmap:
+                    self.appearance_icon_label.setPixmap(icon_pixmap.scaled(20, 20, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
 
     def toggle_image_card(self):
         if self.path_widget.isVisible():
@@ -752,8 +784,18 @@ class Window(QWidget):
             a.setEndValue(50 if self.sidebar_expanded else 140)
         if self.sidebar_expanded:
             self.anim.finished.connect(lambda: [t.hide() for t in self.nav_texts])
+            # 切换菜单图标为收起状态（向右箭头）
+            if self.menu_icon_label and self.menu_icon_path:
+                icon_pixmap = self.load_svg_icon(self.menu_icon_path)
+                if icon_pixmap:
+                    self.menu_icon_label.setPixmap(icon_pixmap.scaled(20, 20, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
         else:
             [t.show() for t in self.nav_texts]
+            # 切换菜单图标为展开状态（向左箭头）
+            if self.menu_icon_label and self.menu_icon_path_active:
+                icon_pixmap = self.load_svg_icon(self.menu_icon_path_active)
+                if icon_pixmap:
+                    self.menu_icon_label.setPixmap(icon_pixmap.scaled(20, 20, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
         self.anim.start()
         self.anim2.start()
         self.sidebar_expanded = not self.sidebar_expanded
