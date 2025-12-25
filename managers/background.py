@@ -71,7 +71,6 @@ class BackgroundManager:
 
             self.current_bg_path = path
 
-        # 图片格式
         else:
             self.player.stop()
             self.video_view.hide()
@@ -101,14 +100,11 @@ class BackgroundManager:
             self.current_bg_path = path
 
     def set_solid_color(self, color):
-        """设置纯色背景 (ARGB格式)"""
-        # 隐藏其他背景
         if self.bg_label_widget:
             self.bg_label_widget.hide()
         self.player.stop()
         self.video_view.hide()
 
-        # 创建或更新纯色背景
         if not self.solid_bg_widget:
             self.solid_bg_widget = QLabel(self.parent)
             self.solid_bg_widget.lower()

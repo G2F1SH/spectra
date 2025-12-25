@@ -1,13 +1,12 @@
 """UI构建器"""
 
 from PyQt6.QtWidgets import (QWidget, QPushButton, QHBoxLayout, QVBoxLayout, QLabel,
-                             QStackedWidget, QLineEdit, QSlider, QColorDialog)
+                             QLineEdit, QSlider, QColorDialog)
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QPixmap
+from PyQt6.QtGui import QPixmap, QColor
 
 from widgets import JellyButton, CardButton, ClickableLabel, make_transparent
-from styles import (STYLE_BTN, STYLE_BTN_ACTIVE, STYLE_ICON, STYLE_TEXT,
-                   SLIDER_STYLE)
+from styles import STYLE_BTN, STYLE_ICON, SLIDER_STYLE
 from utils import load_svg_icon, scale_icon_for_display
 
 
@@ -17,12 +16,10 @@ class UIBuilder:
         self.dpi_scale = getattr(window, 'dpi_scale', 1.0)
 
     def _scale_size(self, size):
-        """根据DPI缩放尺寸"""
         return int(size * self.dpi_scale)
 
     def create_nav_btn(self, icon, text, handler, page_index=None,
                        icon_path=None, icon_path_active=None):
-        """创建导航按钮"""
         container = QWidget()
         container.setFixedHeight(self._scale_size(40))
         container.setStyleSheet("background:transparent;")
@@ -71,7 +68,6 @@ class UIBuilder:
         il.addWidget(icon_lbl)
 
         text_lbl = QLabel(text)
-        # 根据DPI缩放字体大小
         font_size = int(14 * self.dpi_scale)
         text_lbl.setStyleSheet(f"color:white;background:transparent;font-size:{font_size}px;font-family:'微软雅黑';")
         text_lbl.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
@@ -87,7 +83,6 @@ class UIBuilder:
         return container
 
     def create_title_btn(self, text, handler):
-        """创建标题栏按钮"""
         b = JellyButton(text)
         b.setFixedSize(self._scale_size(32), self._scale_size(32))
         font_size = self._scale_size(16)
@@ -97,7 +92,6 @@ class UIBuilder:
         return b
 
     def create_bg_card(self, title, desc, selected, handler):
-        """创建背景选项卡片"""
         card = CardButton()
         card.setFixedHeight(self._scale_size(70))
         card.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -145,8 +139,7 @@ class UIBuilder:
         card.check_label = check_label
         return card
 
-    def create_expandable_menu(self, title, desc, icon_path=None, icon_path_active=None):
-        """创建可展开菜单"""
+    def create_expandable_menu(self, title, desc, icon_path=None, icon_path_active=None, toggle_handler=None, content_attr="appearance"):
         container = QWidget()
         container.setStyleSheet("background:rgba(255,255,255,0.08);border-radius:8px;")
         main_layout = QVBoxLayout(container)
@@ -156,7 +149,10 @@ class UIBuilder:
         header = CardButton()
         header.setFixedHeight(self._scale_size(70))
         header.setCursor(Qt.CursorShape.PointingHandCursor)
-        header.clicked.connect(self.window.toggle_appearance_menu)
+        if toggle_handler:
+            header.clicked.connect(toggle_handler)
+        else:
+            header.clicked.connect(self.window.toggle_appearance_menu)
 
         border_radius = self._scale_size(8)
         header.setStyleSheet(
@@ -201,19 +197,20 @@ class UIBuilder:
 
         main_layout.addWidget(header)
 
-        self.window.appearance_content_layout = QVBoxLayout()
-        self.window.appearance_content_layout.setContentsMargins(0, 0, 0, 0)
-        self.window.appearance_content_layout.setSpacing(0)
+        content_layout = QVBoxLayout()
+        content_layout.setContentsMargins(0, 0, 0, 0)
+        content_layout.setSpacing(0)
 
         content_widget = QWidget()
-        content_widget.setLayout(self.window.appearance_content_layout)
+        content_widget.setLayout(content_layout)
         content_widget.setStyleSheet("background:transparent;")
 
         main_layout.addWidget(content_widget)
 
-        self.window.appearance_icon_path = icon_path
-        self.window.appearance_icon_path_active = icon_path_active
-        self.window.appearance_icon_label = icon_label
+        setattr(self.window, f"{content_attr}_content_layout", content_layout)
+        setattr(self.window, f"{content_attr}_icon_path", icon_path)
+        setattr(self.window, f"{content_attr}_icon_path_active", icon_path_active)
+        setattr(self.window, f"{content_attr}_icon_label", icon_label)
 
         return container
 
@@ -231,7 +228,8 @@ class UIBuilder:
 
         # 外观设置容器
         self.window.appearance_container = self.create_expandable_menu(
-            "外观设置", "背景、主题等外观选项", "svg/palette.svg", "svg/palette-fill.svg"
+            "外观设置", "背景、主题等外观选项", "svg/palette.svg", "svg/palette-fill.svg",
+            content_attr="appearance"
         )
         pl.addWidget(self.window.appearance_container)
 
@@ -273,14 +271,27 @@ class UIBuilder:
         self._create_path_input()
         self.window.appearance_content_layout.addWidget(self.window.path_widget)
 
-        # 初始状态
         self.window.appearance_content.setVisible(False)
+
+        # 语言设置容器
+        self.window.language_container = self.create_expandable_menu(
+            "语言设置", "选择界面显示语言", "svg/translate.svg", "svg/file-earmark-font.svg",
+            toggle_handler=self.window.toggle_language_menu,
+            content_attr="language"
+        )
+        pl.addWidget(self.window.language_container)
+
+        self.window.language_content = self.window.language_container.layout().itemAt(1).widget()
+
+        # 语言卡片（创建但不添加到布局，_create_language_card 会自己添加）
+        self._create_language_card()
+
+        self.window.language_content.setVisible(False)
 
         pl.addStretch()
         return page
 
     def create_instance_page(self):
-        """创建实例页面"""
         page = QWidget()
         page.setStyleSheet("background:transparent;")
         pl = QVBoxLayout(page)
@@ -295,7 +306,6 @@ class UIBuilder:
         return page
 
     def create_download_page(self):
-        """创建下载页面"""
         page = QWidget()
         page.setStyleSheet("background:transparent;")
         pl = QVBoxLayout(page)
@@ -310,7 +320,6 @@ class UIBuilder:
         return page
 
     def _create_opacity_slider(self):
-        """创建透明度滑块"""
         self.window.opacity_widget = QWidget()
         border_radius = self._scale_size(8)
         self.window.opacity_widget.setStyleSheet(f"background:rgba(255,255,255,0);border-bottom-left-radius:{border_radius}px;border-bottom-right-radius:{border_radius}px;")
@@ -321,7 +330,6 @@ class UIBuilder:
         opacity_header_layout = QHBoxLayout()
         opacity_label = QLabel("模糊透明度")
         opacity_label.setStyleSheet(f"color:rgba(255,255,255,0.8);font-size:{self._scale_size(13)}px;font-family:'微软雅黑';")
-        # 将10-255转换为0-100%显示
         opacity_value = QLabel()
         opacity_value.setText(str(int((self.window.config.get("blur_opacity", 150) - 10) / (255 - 10) * 100)) + "%")
         opacity_value.setStyleSheet(f"color:rgba(255,255,255,0.8);font-size:{self._scale_size(13)}px;font-family:'微软雅黑';")
@@ -341,7 +349,6 @@ class UIBuilder:
         self.window.opacity_widget.setVisible(self.window.config.get("background_mode") == "blur")
 
     def _create_path_input(self):
-        """创建路径输入"""
         self.window.path_widget = QWidget()
         border_radius = self._scale_size(8)
         self.window.path_widget.setStyleSheet(f"background:rgba(255,255,255,0);border-bottom-left-radius:{border_radius}px;border-bottom-right-radius:{border_radius}px;")
@@ -383,7 +390,6 @@ class UIBuilder:
         self.window.path_widget.setVisible(self.window.config.get("background_mode") == "image")
 
     def _create_color_picker(self):
-        """创建颜色选择器"""
         self.window.color_widget = QWidget()
         border_radius = self._scale_size(8)
         self.window.color_widget.setStyleSheet(f"background:rgba(255,255,255,0);border-bottom-left-radius:{border_radius}px;border-bottom-right-radius:{border_radius}px;")
@@ -405,19 +411,18 @@ class UIBuilder:
         self.window.color_input.editingFinished.connect(self.window.on_color_changed)
         color_layout.addWidget(self.window.color_input, 1)
 
-        # 颜色选择按钮
         color_btn = QPushButton()
         color_btn.setFixedSize(self._scale_size(32), self._scale_size(32))
         border_radius_btn = self._scale_size(4)
-        
-        # 解析当前颜色用于显示
+
         color_str = self.window.config.get("background_color", "#00000000")
         try:
+            from PyQt6.QtGui import QColor
             color = self._parse_color(color_str)
             bg_color = color.name(QColor.NameFormat.HexArgb) if color else "#00000000"
         except:
             bg_color = "#00000000"
-        
+
         color_btn.setStyleSheet(f"QPushButton{{background:{bg_color};border:1px solid rgba(255,255,255,0.3);border-radius:{border_radius_btn}px;}}QPushButton:hover{{background:{bg_color};border:1px solid rgba(255,255,255,0.5);}}")
         color_btn.clicked.connect(self.window.choose_background_color)
         color_layout.addWidget(color_btn)
@@ -426,12 +431,128 @@ class UIBuilder:
         self.window.color_widget.setVisible(self.window.config.get("background_mode") == "solid")
 
     def _parse_color(self, color_str):
-        """解析ARGB颜色字符串"""
         from PyQt6.QtGui import QColor
         color = QColor(color_str)
         if color.isValid():
             return color
-        # 尝试解析 #RRGGBB 格式，添加透明度
         if len(color_str) == 7 and color_str.startswith('#'):
             return QColor(f"#FF{color_str[1:]}")
         return QColor("#00000000")
+
+    def _create_language_card(self):
+        language_widget = QWidget()
+        language_widget.setStyleSheet(f"background:rgba(255,255,255,0);border-bottom-left-radius:{self._scale_size(8)}px;border-bottom-right-radius:{self._scale_size(8)}px;")
+        language_layout = QHBoxLayout(language_widget)
+        language_layout.setContentsMargins(self._scale_size(35), self._scale_size(12), self._scale_size(15), self._scale_size(12))
+        language_layout.setSpacing(self._scale_size(10))
+
+        language_label = QLabel("界面语言")
+        language_label.setStyleSheet(f"color:rgba(255,255,255,0.8);font-size:{self._scale_size(13)}px;font-family:'微软雅黑';")
+        language_layout.addWidget(language_label)
+
+        language_layout.addStretch()
+
+        from PyQt6.QtWidgets import QComboBox
+        self.window.language_combo = QComboBox()
+        self.window.language_combo.setFixedHeight(self._scale_size(32))
+        self.window.language_combo.setFixedWidth(self._scale_size(150))
+        self.window.language_combo.setMaxVisibleItems(5)
+        padding = self._scale_size(6)
+        border_radius = self._scale_size(4)
+        self.window.language_combo.setStyleSheet(
+            f"QComboBox{{"
+            f"background:rgba(0,0,0,0.3);"
+            f"border:1px solid rgba(255,255,255,0.15);"
+            f"border-radius:{border_radius}px;"
+            f"padding:{padding}px;"
+            f"color:rgba(255,255,255,0.95);"
+            f"font-size:{self._scale_size(13)}px;"
+            f"font-family:'微软雅黑';"
+            f"}}"
+            f"QComboBox:hover{{"
+            f"background:rgba(0,0,0,0.4);"
+            f"border:1px solid rgba(255,255,255,0.25);"
+            f"}}"
+            f"QComboBox:focus{{"
+            f"background:rgba(0,0,0,0.5);"
+            f"border:1px solid rgba(100,150,255,0.6);"
+            f"}}"
+            f"QComboBox:on{{"
+            f"padding-top:{padding - 1}px;"
+            f"padding-bottom:{padding - 1}px;"
+            f"}}"
+            f"QComboBox::drop-down{{"
+            f"border:none;"
+            f"width:28px;"
+            f"background:transparent;"
+            f"}}"
+            f"QComboBox::down-arrow{{"
+            f"image:url(svg/x-diamond.svg);"
+            f"width:12px;"
+            f"height:12px;"
+            f"}}"
+            f"QComboBox QAbstractItemView{{"
+            f"background:rgba(0,0,0,0.9);"
+            f"border:1px solid rgba(255,255,255,0.1);"
+            f"border-radius:{border_radius}px;"
+            f"selection-background-color:rgba(64,128,255,0.8);"
+            f"selection-color:white;"
+            f"outline:none;"
+            f"padding:{self._scale_size(2)}px;"
+            f"}}"
+            f"QComboBox QAbstractItemView::item{{"
+            f"height:{self._scale_size(28)}px;"
+            f"padding:{self._scale_size(6)}px {self._scale_size(8)}px;"
+            f"color:rgba(255,255,255,0.85);"
+            f"border-radius:{border_radius - 1}px;"
+            f"}}"
+            f"QComboBox QAbstractItemView::item:hover{{"
+            f"background:rgba(255,255,255,0.08);"
+            f"}}"
+            f"QComboBox QAbstractItemView::item:selected{{"
+            f"background:rgba(64,128,255,0.9);"
+            f"color:white;"
+            f"}}"
+            f"QComboBox QScrollBar:vertical{{"
+            f"background:rgba(255,255,255,0.05);"
+            f"width:8px;"
+            f"margin:0px;"
+            f"border-radius:4px;"
+            f"}}"
+            f"QComboBox QScrollBar::handle:vertical{{"
+            f"background:rgba(255,255,255,0.3);"
+            f"min-height:20px;"
+            f"border-radius:4px;"
+            f"}}"
+            f"QComboBox QScrollBar::handle:vertical:hover{{"
+            f"background:rgba(255,255,255,0.5);"
+            f"}}"
+            f"QComboBox QScrollBar::add-line:vertical,"
+            f"QComboBox QScrollBar::sub-line:vertical{{"
+            f"border:none;"
+            f"background:none;"
+            f"}}"
+            f"QComboBox QScrollBar::add-page:vertical,"
+            f"QComboBox QScrollBar::sub-page:vertical{{"
+            f"background:none;"
+            f"}}"
+        )
+        self.window.language_combo.addItems([
+            "简体中文",
+            "English",
+            "日本語",
+            "한국어",
+            "Español",
+            "Français",
+            "Deutsch",
+            "Português",
+            "Русский",
+            "العربية"
+        ])
+        self.window.language_combo.setCurrentIndex(0)
+
+        language_layout.addWidget(self.window.language_combo)
+
+        self.window.language_content_layout.addWidget(language_widget)
+
+        return language_widget
