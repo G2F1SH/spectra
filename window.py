@@ -10,7 +10,7 @@ from BlurWindow.blurWindow import blur
 
 from widgets import JellyButton
 from styles import STYLE_BTN, STYLE_BTN_ACTIVE
-from utils import load_svg_icon
+from utils import load_svg_icon, scale_icon_for_display
 from managers import ConfigManager, BackgroundManager
 from ui import UIBuilder
 
@@ -178,7 +178,7 @@ class Window(QWidget):
                     if icon_pixmap:
                         icon_lbl = container.findChild(QLabel, "nav_icon")
                         if icon_lbl:
-                            icon_lbl.setPixmap(icon_pixmap.scaled(20, 20, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
+                            icon_lbl.setPixmap(scale_icon_for_display(icon_pixmap, 20))
             else:
                 ind.setStyleSheet("background:transparent;border-radius:1px;")
                 btn.setStyleSheet(STYLE_BTN)
@@ -187,7 +187,7 @@ class Window(QWidget):
                     if icon_pixmap:
                         icon_lbl = container.findChild(QLabel, "nav_icon")
                         if icon_lbl:
-                            icon_lbl.setPixmap(icon_pixmap.scaled(20, 20, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
+                            icon_lbl.setPixmap(scale_icon_for_display(icon_pixmap, 20))
 
     def toggle_sidebar(self):
         """切换侧边栏"""
@@ -203,13 +203,13 @@ class Window(QWidget):
             if self.menu_icon_label and self.menu_icon_path:
                 icon_pixmap = load_svg_icon(self.menu_icon_path)
                 if icon_pixmap:
-                    self.menu_icon_label.setPixmap(icon_pixmap.scaled(20, 20, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
+                    self.menu_icon_label.setPixmap(scale_icon_for_display(icon_pixmap, 20))
         else:
             [t.show() for t in self.nav_texts]
             if self.menu_icon_label and self.menu_icon_path_active:
                 icon_pixmap = load_svg_icon(self.menu_icon_path_active)
                 if icon_pixmap:
-                    self.menu_icon_label.setPixmap(icon_pixmap.scaled(20, 20, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
+                    self.menu_icon_label.setPixmap(scale_icon_for_display(icon_pixmap, 20))
         self.anim.start()
         self.anim2.start()
         self.sidebar_expanded = not self.sidebar_expanded
@@ -224,13 +224,13 @@ class Window(QWidget):
             if self.appearance_icon_label and self.appearance_icon_path:
                 icon_pixmap = load_svg_icon(self.appearance_icon_path)
                 if icon_pixmap:
-                    self.appearance_icon_label.setPixmap(icon_pixmap.scaled(20, 20, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
+                    self.appearance_icon_label.setPixmap(scale_icon_for_display(icon_pixmap, 20))
         else:
             content.setVisible(True)
             if self.appearance_icon_label and self.appearance_icon_path_active:
                 icon_pixmap = load_svg_icon(self.appearance_icon_path_active)
                 if icon_pixmap:
-                    self.appearance_icon_label.setPixmap(icon_pixmap.scaled(20, 20, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
+                    self.appearance_icon_label.setPixmap(scale_icon_for_display(icon_pixmap, 20))
 
     def set_background(self, mode):
         """设置背景模式"""
@@ -242,7 +242,7 @@ class Window(QWidget):
                 "QPushButton{background:rgba(255,255,255,0.15);border:none;border-radius:0px;}QPushButton:hover{background:rgba(255,255,255,0.1);}QPushButton:pressed{background:rgba(255,255,255,0.05);}")
             check_pixmap = load_svg_icon("svg/check-lg.svg")
             if check_pixmap:
-                self.blur_card.check_label.setPixmap(check_pixmap.scaled(20, 20, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
+                self.blur_card.check_label.setPixmap(scale_icon_for_display(check_pixmap, 20))
 
             self.image_card.setStyleSheet(
                 "QPushButton{background:rgba(255,255,255,0.05);border:none;border-radius:0px;}QPushButton:hover{background:rgba(255,255,255,0.1);}QPushButton:pressed{background:rgba(255,255,255,0.03);}")
@@ -264,7 +264,7 @@ class Window(QWidget):
                 "QPushButton{background:rgba(255,255,255,0.15);border:none;border-radius:0px;}QPushButton:hover{background:rgba(255,255,255,0.1);}QPushButton:pressed{background:rgba(255,255,255,0.05);}")
             check_pixmap = load_svg_icon("svg/check-lg.svg")
             if check_pixmap:
-                self.image_card.check_label.setPixmap(check_pixmap.scaled(20, 20, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
+                self.image_card.check_label.setPixmap(scale_icon_for_display(check_pixmap, 20))
 
             self.path_widget.setVisible(True)
             self.opacity_widget.setVisible(False)
@@ -387,6 +387,7 @@ class Window(QWidget):
         if hasattr(self, 'current_bg_path') and self.current_bg_path:
             self.set_background_image(self.current_bg_path)
 
+        # 保存逻辑像素（width/height已经是逻辑像素值）
         self.config["window_width"] = self.width()
         self.config["window_height"] = self.height()
         self.config_manager.save_config()

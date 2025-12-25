@@ -14,12 +14,17 @@ os.environ["QT_MEDIA_BACKEND"] = "ffmpeg"
 os.environ["OPENCV_FFMPEG_CAPTURE_OPTIONS"] = "hwaccel;none"
 
 from PyQt6.QtWidgets import QApplication
-from PyQt6.QtCore import QTimer
+from PyQt6.QtCore import QTimer, Qt
 from splash_screen import SplashScreen
 from window import Window
 
 
 if __name__ == "__main__":
+    # 必须在创建 QApplication 之前设置高DPI属性
+    QApplication.setHighDpiScaleFactorRoundingPolicy(
+        Qt.HighDpiScaleFactorRoundingPolicy.PassThrough
+    )
+    
     app = QApplication(sys.argv)
 
     # 创建并显示启动画面

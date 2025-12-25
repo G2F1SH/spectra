@@ -8,7 +8,7 @@ from PyQt6.QtGui import QPixmap
 from widgets import JellyButton, CardButton, ClickableLabel, make_transparent
 from styles import (STYLE_BTN, STYLE_BTN_ACTIVE, STYLE_ICON, STYLE_TEXT,
                    SLIDER_STYLE)
-from utils import load_svg_icon
+from utils import load_svg_icon, scale_icon_for_display
 
 
 class UIBuilder:
@@ -58,7 +58,7 @@ class UIBuilder:
         icon_lbl.setObjectName("nav_icon")
 
         if isinstance(icon, QPixmap):
-            icon_lbl.setPixmap(icon.scaled(20, 20, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
+            icon_lbl.setPixmap(scale_icon_for_display(icon, 20))
         else:
             icon_lbl.setText(icon)
             icon_lbl.setStyleSheet(STYLE_ICON)
@@ -112,7 +112,7 @@ class UIBuilder:
         if selected:
             check_pixmap = load_svg_icon("svg/check-lg.svg")
             if check_pixmap:
-                check_label.setPixmap(check_pixmap.scaled(20, 20, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
+                check_label.setPixmap(scale_icon_for_display(check_pixmap, 20))
 
         layout.addWidget(check_label, 0, Qt.AlignmentFlag.AlignTop)
 
@@ -168,7 +168,7 @@ class UIBuilder:
 
             icon_pixmap = load_svg_icon(icon_path)
             if icon_pixmap:
-                icon_label.setPixmap(icon_pixmap.scaled(20, 20, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
+                icon_label.setPixmap(scale_icon_for_display(icon_pixmap, 20))
 
             header_layout.addWidget(icon_label, 0, Qt.AlignmentFlag.AlignTop)
 
@@ -320,7 +320,7 @@ class UIBuilder:
 
         folder_pixmap = load_svg_icon("svg/folder2.svg")
         if folder_pixmap:
-            browse_btn.setPixmap(folder_pixmap.scaled(20, 20, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
+            browse_btn.setPixmap(scale_icon_for_display(folder_pixmap, 20))
 
         path_layout.addWidget(browse_btn)
 
