@@ -17,7 +17,7 @@ from styles import STYLE_BTN, STYLE_BTN_ACTIVE
 from utils import load_svg_icon, scale_icon_for_display
 from managers import ConfigManager, BackgroundManager, LanguageManager
 from ui import UIBuilder
-from widgets import NewsCard
+from widgets import NewsCard, set_current_font
 
 
 class NewsFetchThread(QThread):
@@ -195,7 +195,7 @@ class Window(QWidget):
         tl.setContentsMargins(self.ui_builder._scale_size(42), 0, self.ui_builder._scale_size(5), 0)
         self.title_lbl = QLabel("Spectra")
         font_size = int(14 * self.dpi_scale)
-        self.title_lbl.setStyleSheet(f"color:white;background:transparent;font-size:{font_size}px;font-family:'微软雅黑';")
+        self.title_lbl.setStyleSheet(f"color:white;background:transparent;font-size:{font_size}px;font-family:'{self.ui_builder._get_font_family()}';")
         self.title_lbl.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
         self.title_lbl.setMouseTracking(True)
         self.title_lbl.hide()
@@ -821,9 +821,37 @@ class Window(QWidget):
     def _apply_font_to_app(self, font_family):
         """应用字体到应用的所有控件"""
         from PyQt6.QtGui import QFont
+
+        # 设置全局字体
+        set_current_font(font_family)
+
         app = QApplication.instance()
         if app:
             font = QFont(font_family)
             app.setFont(font)
+
+            # 强制更新所有控件以应用新字体
+            self._update_all_fonts(font_family)
+
+    def _update_all_fonts(self, font_family):
+        """更新所有控件的字体样式"""
+        # 更新窗口中的导航文本和标题
+        for text_widget in self.nav_texts:
+            font_size = int(14 * self.dpi_scale)
+            text_widget.setStyleSheet(f"color:white;background:transparent;font-size:{font_size}px;font-family:'{font_family}';")
+
+        # 更新标题标签
+        if hasattr(self, 'title_lbl'):
+            font_size = int(14 * self.dpi_scale)
+            self.title_lbl.setStyleSheet(f"color:white;background:transparent;font-size:{font_size}px;font-family:'{font_family}';")
+
+        # 更新所有新闻卡片的字体
+        home_page = self.stack.widget(0)
+        if home_page and hasattr(home_page, 'news_cards'):
+            for card in home_page.news_cards:
+                card.update_font(font_family)
+
+        # 触发 UI 更新以刷新设置页面的字体
+        self.ui_builder._update_settings_font(font_family)
 
 

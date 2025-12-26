@@ -6,6 +6,22 @@ from PyQt6.QtGui import QFont
 from utils import load_svg_icon, scale_icon_for_display
 
 
+# 全局字体变量
+_current_font_family = "Microsoft YaHei UI"
+
+
+def get_current_font():
+    """获取当前字体系列"""
+    global _current_font_family
+    return _current_font_family
+
+
+def set_current_font(font_family):
+    """设置当前字体系列"""
+    global _current_font_family
+    _current_font_family = font_family
+
+
 class NewsCard(QWidget):
     def __init__(self, title, content, on_close=None, dpi_scale=1.0, parent=None):
         super().__init__(parent)
@@ -37,7 +53,7 @@ class NewsCard(QWidget):
         # 标题标签
         self.title_label = QLabel(title)
         title_font = QFont()
-        title_font.setFamily('微软雅黑')
+        title_font.setFamily(get_current_font())
         title_font.setWeight(QFont.Weight.Bold)
         title_font.setPointSize(int(13 * dpi_scale))
         self.title_label.setFont(title_font)
@@ -75,7 +91,7 @@ class NewsCard(QWidget):
         # 内容标签
         self.content_label = QLabel(content)
         content_font = QFont()
-        content_font.setFamily('微软雅黑')
+        content_font.setFamily(get_current_font())
         content_font.setPointSize(int(11 * dpi_scale))
         self.content_label.setFont(content_font)
         self.content_label.setStyleSheet("""
@@ -112,10 +128,23 @@ class NewsCard(QWidget):
     def set_content(self, title, content):
         self.title_label.setText(title)
         self.content_label.setText(content)
-    
+
     def set_on_close(self, on_close):
         self.on_close = on_close
-    
+
+    def update_font(self, font_family):
+        """更新卡片字体"""
+        title_font = QFont()
+        title_font.setFamily(font_family)
+        title_font.setWeight(QFont.Weight.Bold)
+        title_font.setPointSize(int(13 * self.dpi_scale))
+        self.title_label.setFont(title_font)
+
+        content_font = QFont()
+        content_font.setFamily(font_family)
+        content_font.setPointSize(int(11 * self.dpi_scale))
+        self.content_label.setFont(content_font)
+
     def fade_in(self, duration=300):
         """淡入动画"""
         self.anim = QPropertyAnimation(self.opacity_effect, b"opacity")

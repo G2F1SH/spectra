@@ -5,7 +5,7 @@ from PyQt6.QtWidgets import (QWidget, QPushButton, QHBoxLayout, QVBoxLayout, QLa
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPixmap, QColor
 
-from widgets import JellyButton, CardButton, ClickableLabel, make_transparent
+from widgets import JellyButton, CardButton, ClickableLabel, make_transparent, get_current_font, set_current_font
 from styles import STYLE_BTN, STYLE_ICON, SLIDER_STYLE
 from utils import load_svg_icon, scale_icon_for_display
 
@@ -17,6 +17,10 @@ class UIBuilder:
 
     def _scale_size(self, size):
         return int(size * self.dpi_scale)
+
+    def _get_font_family(self):
+        """获取当前字体系列"""
+        return get_current_font()
 
     def create_nav_btn(self, icon, text, handler, page_index=None,
                        icon_path=None, icon_path_active=None):
@@ -69,7 +73,7 @@ class UIBuilder:
 
         text_lbl = QLabel(text)
         font_size = int(14 * self.dpi_scale)
-        text_lbl.setStyleSheet(f"color:white;background:transparent;font-size:{font_size}px;font-family:'微软雅黑';")
+        text_lbl.setStyleSheet(f"color:white;background:transparent;font-size:{font_size}px;font-family:'{self._get_font_family()}';")
         text_lbl.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
         text_lbl.setMouseTracking(True)
         text_lbl.hide()
@@ -87,7 +91,7 @@ class UIBuilder:
         b.setFixedSize(self._scale_size(32), self._scale_size(32))
         font_size = self._scale_size(16)
         b.setStyleSheet(
-            f"QPushButton{{background:transparent;color:white;border:none;border-radius:{self._scale_size(16)}px;font-size:{font_size}px;font-family:'微软雅黑';}}QPushButton:hover{{background:rgba(255,255,255,0.2);}}")
+            f"QPushButton{{background:transparent;color:white;border:none;border-radius:{self._scale_size(16)}px;font-size:{font_size}px;font-family:'{self._get_font_family()}';}}QPushButton:hover{{background:rgba(255,255,255,0.2);}}")
         b.clicked.connect(handler)
         return b
 
@@ -123,13 +127,13 @@ class UIBuilder:
         text_layout.setContentsMargins(0, 0, 0, 0)
 
         title_lbl = QLabel(title)
-        title_lbl.setStyleSheet(f"color:white;font-size:{self._scale_size(14)}px;font-family:'微软雅黑';background:transparent;")
+        title_lbl.setStyleSheet(f"color:white;font-size:{self._scale_size(14)}px;font-family:'{self._get_font_family()}';background:transparent;")
         title_lbl.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
         text_layout.addWidget(title_lbl)
 
         desc_lbl = QLabel(desc)
         desc_lbl.setStyleSheet(
-            f"color:rgba(255,255,255,0.6);font-size:{self._scale_size(12)}px;font-family:'微软雅黑';background:transparent;")
+            f"color:rgba(255,255,255,0.6);font-size:{self._scale_size(12)}px;font-family:'{self._get_font_family()}';background:transparent;")
         desc_lbl.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
         text_layout.addWidget(desc_lbl)
 
@@ -182,13 +186,13 @@ class UIBuilder:
         text_layout.setContentsMargins(0, 0, 0, 0)
 
         title_lbl = QLabel(title)
-        title_lbl.setStyleSheet(f"color:white;font-size:{self._scale_size(14)}px;font-family:'微软雅黑';background:transparent;")
+        title_lbl.setStyleSheet(f"color:white;font-size:{self._scale_size(14)}px;font-family:'{self._get_font_family()}';background:transparent;")
         title_lbl.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
         text_layout.addWidget(title_lbl)
 
         desc_lbl = QLabel(desc)
         desc_lbl.setStyleSheet(
-            f"color:rgba(255,255,255,0.6);font-size:{self._scale_size(12)}px;font-family:'微软雅黑';background:transparent;")
+            f"color:rgba(255,255,255,0.6);font-size:{self._scale_size(12)}px;font-family:'{self._get_font_family()}';background:transparent;")
         desc_lbl.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
         text_layout.addWidget(desc_lbl)
 
@@ -223,7 +227,7 @@ class UIBuilder:
         pl.setSpacing(self._scale_size(15))
 
         title = QLabel(self.window.language_manager.translate("page_settings"))
-        title.setStyleSheet(f"color:white;font-size:{self._scale_size(20)}px;font-family:'微软雅黑';font-weight:bold;")
+        title.setStyleSheet(f"color:white;font-size:{self._scale_size(20)}px;font-family:'{self._get_font_family()}';font-weight:bold;")
         pl.addWidget(title)
 
         # 外观设置容器
@@ -346,7 +350,7 @@ class UIBuilder:
         pl.setSpacing(self._scale_size(15))
 
         title = QLabel(self.window.language_manager.translate("page_instances"))
-        title.setStyleSheet(f"color:white;font-size:{self._scale_size(20)}px;font-family:'微软雅黑';font-weight:bold;")
+        title.setStyleSheet(f"color:white;font-size:{self._scale_size(20)}px;font-family:'{self._get_font_family()}';font-weight:bold;")
         pl.addWidget(title)
 
         pl.addStretch()
@@ -360,7 +364,7 @@ class UIBuilder:
         pl.setSpacing(self._scale_size(15))
 
         title = QLabel(self.window.language_manager.translate("page_downloads"))
-        title.setStyleSheet(f"color:white;font-size:{self._scale_size(20)}px;font-family:'微软雅黑';font-weight:bold;")
+        title.setStyleSheet(f"color:white;font-size:{self._scale_size(20)}px;font-family:'{self._get_font_family()}';font-weight:bold;")
         pl.addWidget(title)
 
         pl.addStretch()
@@ -376,10 +380,10 @@ class UIBuilder:
 
         opacity_header_layout = QHBoxLayout()
         opacity_label = QLabel(self.window.language_manager.translate("blur_opacity"))
-        opacity_label.setStyleSheet(f"color:rgba(255,255,255,0.8);font-size:{self._scale_size(13)}px;font-family:'微软雅黑';")
+        opacity_label.setStyleSheet(f"color:rgba(255,255,255,0.8);font-size:{self._scale_size(13)}px;font-family:'{self._get_font_family()}';")
         opacity_value = QLabel()
         opacity_value.setText(str(int((self.window.config.get("blur_opacity", 150) - 10) / (255 - 10) * 100)) + "%")
-        opacity_value.setStyleSheet(f"color:rgba(255,255,255,0.8);font-size:{self._scale_size(13)}px;font-family:'微软雅黑';")
+        opacity_value.setStyleSheet(f"color:rgba(255,255,255,0.8);font-size:{self._scale_size(13)}px;font-family:'{self._get_font_family()}';")
         self.window.opacity_value_label = opacity_value
         opacity_header_layout.addWidget(opacity_label)
         opacity_header_layout.addStretch()
@@ -404,7 +408,7 @@ class UIBuilder:
         path_layout.setSpacing(self._scale_size(10))
 
         path_label = QLabel(self.window.language_manager.translate("bg_image_path"))
-        path_label.setStyleSheet(f"color:rgba(255,255,255,0.8);font-size:{self._scale_size(13)}px;font-family:'微软雅黑';")
+        path_label.setStyleSheet(f"color:rgba(255,255,255,0.8);font-size:{self._scale_size(13)}px;font-family:'{self._get_font_family()}';")
         path_layout.addWidget(path_label)
 
         self.window.path_input = QLineEdit()
@@ -412,7 +416,7 @@ class UIBuilder:
         padding = self._scale_size(6)
         border_radius_input = self._scale_size(4)
         self.window.path_input.setStyleSheet(
-            f"QLineEdit{{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:{border_radius_input}px;padding:{padding}px;color:white;font-size:{self._scale_size(13)}px;font-family:'微软雅黑';}}")
+            f"QLineEdit{{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:{border_radius_input}px;padding:{padding}px;color:white;font-size:{self._scale_size(13)}px;font-family:'{self._get_font_family()}';}}")
         self.window.path_input.editingFinished.connect(self.window.on_path_changed)
         path_layout.addWidget(self.window.path_input, 1)
 
@@ -445,7 +449,7 @@ class UIBuilder:
         color_layout.setSpacing(self._scale_size(10))
 
         color_label = QLabel(self.window.language_manager.translate("bg_color"))
-        color_label.setStyleSheet(f"color:rgba(255,255,255,0.8);font-size:{self._scale_size(13)}px;font-family:'微软雅黑';")
+        color_label.setStyleSheet(f"color:rgba(255,255,255,0.8);font-size:{self._scale_size(13)}px;font-family:'{self._get_font_family()}';")
         color_layout.addWidget(color_label)
 
         # 颜色预览和输入
@@ -454,7 +458,7 @@ class UIBuilder:
         padding = self._scale_size(6)
         border_radius_input = self._scale_size(4)
         self.window.color_input.setStyleSheet(
-            f"QLineEdit{{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:{border_radius_input}px;padding:{padding}px;color:white;font-size:{self._scale_size(13)}px;font-family:'微软雅黑';}}")
+            f"QLineEdit{{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:{border_radius_input}px;padding:{padding}px;color:white;font-size:{self._scale_size(13)}px;font-family:'{self._get_font_family()}';}}")
         self.window.color_input.editingFinished.connect(self.window.on_color_changed)
         color_layout.addWidget(self.window.color_input, 1)
 
@@ -495,7 +499,7 @@ class UIBuilder:
         font_select_layout.setSpacing(self._scale_size(10))
 
         font_select_label = QLabel(self.window.language_manager.translate("font_select_label"))
-        font_select_label.setStyleSheet(f"color:rgba(255,255,255,0.8);font-size:{self._scale_size(13)}px;font-family:'微软雅黑';")
+        font_select_label.setStyleSheet(f"color:rgba(255,255,255,0.8);font-size:{self._scale_size(13)}px;font-family:'{self._get_font_family()}';")
         font_select_layout.addWidget(font_select_label)
 
         font_select_layout.addStretch()
@@ -516,7 +520,7 @@ class UIBuilder:
             f"padding:{padding}px;"
             f"color:rgba(255,255,255,0.95);"
             f"font-size:{self._scale_size(13)}px;"
-            f"font-family:'微软雅黑';"
+            f"font-family:'{self._get_font_family()}';"
             f"}}"
             f"QComboBox:hover{{"
             f"background:rgba(0,0,0,0.4);"
@@ -614,10 +618,6 @@ class UIBuilder:
 
         return self.window.font_select_widget
 
-        self.window.font_select_widget.setVisible(self.window.config.get("font_mode") == 1)
-
-        return self.window.font_select_widget
-
     def _create_font_path_widget(self):
         self.window.font_path_widget = QWidget()
         border_radius = self._scale_size(8)
@@ -627,7 +627,7 @@ class UIBuilder:
         font_path_layout.setSpacing(self._scale_size(10))
 
         font_path_label = QLabel(self.window.language_manager.translate("font_custom_label"))
-        font_path_label.setStyleSheet(f"color:rgba(255,255,255,0.8);font-size:{self._scale_size(13)}px;font-family:'微软雅黑';")
+        font_path_label.setStyleSheet(f"color:rgba(255,255,255,0.8);font-size:{self._scale_size(13)}px;font-family:'{self._get_font_family()}';")
         font_path_layout.addWidget(font_path_label)
 
         self.window.font_path_input = QLineEdit()
@@ -635,7 +635,7 @@ class UIBuilder:
         padding = self._scale_size(6)
         border_radius_input = self._scale_size(4)
         self.window.font_path_input.setStyleSheet(
-            f"QLineEdit{{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:{border_radius_input}px;padding:{padding}px;color:white;font-size:{self._scale_size(13)}px;font-family:'微软雅黑';}}")
+            f"QLineEdit{{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:{border_radius_input}px;padding:{padding}px;color:white;font-size:{self._scale_size(13)}px;font-family:'{self._get_font_family()}';}}")
         self.window.font_path_input.editingFinished.connect(self.window.on_font_path_changed)
         font_path_layout.addWidget(self.window.font_path_input, 1)
 
@@ -669,7 +669,7 @@ class UIBuilder:
         language_layout.setSpacing(self._scale_size(10))
 
         language_label = QLabel(self.window.language_manager.translate("settings_language_label"))
-        language_label.setStyleSheet(f"color:rgba(255,255,255,0.8);font-size:{self._scale_size(13)}px;font-family:'微软雅黑';")
+        language_label.setStyleSheet(f"color:rgba(255,255,255,0.8);font-size:{self._scale_size(13)}px;font-family:'{self._get_font_family()}';")
         language_layout.addWidget(language_label)
 
         language_layout.addStretch()
@@ -689,7 +689,7 @@ class UIBuilder:
             f"padding:{padding}px;"
             f"color:rgba(255,255,255,0.95);"
             f"font-size:{self._scale_size(13)}px;"
-            f"font-family:'微软雅黑';"
+            f"font-family:'{self._get_font_family()}';"
             f"}}"
             f"QComboBox:hover{{"
             f"background:rgba(0,0,0,0.4);"
@@ -921,11 +921,159 @@ class UIBuilder:
                 label = font_path_layout.itemAt(0).widget()
                 label.setText(self.window.language_manager.translate("font_custom_label"))
 
+    def _update_settings_font(self, font_family):
+        """更新设置页面的字体"""
+        # 更新设置页面标题
+        settings_page = self.window.stack.widget(3)
+        if settings_page and settings_page.layout():
+            title = settings_page.layout().itemAt(0).widget()
+            if title:
+                title.setStyleSheet(f"color:white;font-size:{self._scale_size(20)}px;font-family:'{font_family}';font-weight:bold;")
+
+        # 更新其他页面标题
+        for i in [0, 1, 2]:
+            page = self.window.stack.widget(i)
+            if page and page.layout():
+                title = page.layout().itemAt(1).widget() if i == 0 else page.layout().itemAt(0).widget()
+                if title and hasattr(title, 'setText'):
+                    title.setStyleSheet(f"color:white;font-size:{self._scale_size(20)}px;font-family:'{font_family}';font-weight:bold;")
+
+        # 更新外观设置容器的标题和描述
+        if hasattr(self.window, 'appearance_container'):
+            self._update_expandable_menu_font(self.window.appearance_container, font_family)
+
+        # 更新语言设置容器的标题和描述
+        if hasattr(self.window, 'language_container'):
+            self._update_expandable_menu_font(self.window.language_container, font_family)
+
+        # 更新字体设置容器的标题和描述
+        if hasattr(self.window, 'font_container'):
+            self._update_expandable_menu_font(self.window.font_container, font_family)
+
+        # 更新所有卡片的标题和描述
+        if hasattr(self.window, 'blur_card'):
+            self._update_bg_card_font(self.window.blur_card, font_family)
+        if hasattr(self.window, 'solid_card'):
+            self._update_bg_card_font(self.window.solid_card, font_family)
+        if hasattr(self.window, 'image_card'):
+            self._update_bg_card_font(self.window.image_card, font_family)
+        if hasattr(self.window, 'font_select_card'):
+            self._update_bg_card_font(self.window.font_select_card, font_family)
+        if hasattr(self.window, 'font_custom_card'):
+            self._update_bg_card_font(self.window.font_custom_card, font_family)
+
+        # 更新透明度标签
+        if hasattr(self.window, 'opacity_widget'):
+            opacity_layout = self.window.opacity_widget.layout()
+            if opacity_layout and opacity_layout.count() > 0:
+                header_layout = opacity_layout.itemAt(0)
+                if header_layout and isinstance(header_layout, QHBoxLayout):
+                    label = header_layout.itemAt(0).widget()
+                    if label:
+                        label.setStyleSheet(f"color:rgba(255,255,255,0.8);font-size:{self._scale_size(13)}px;font-family:'{font_family}';")
+                    value_label = header_layout.itemAt(1).widget()
+                    if value_label:
+                        value_label.setStyleSheet(f"color:rgba(255,255,255,0.8);font-size:{self._scale_size(13)}px;font-family:'{font_family}';")
+
+        # 更新路径标签
+        if hasattr(self.window, 'path_widget'):
+            path_layout = self.window.path_widget.layout()
+            if path_layout and path_layout.count() > 0:
+                label = path_layout.itemAt(0).widget()
+                if label:
+                    label.setStyleSheet(f"color:rgba(255,255,255,0.8);font-size:{self._scale_size(13)}px;font-family:'{font_family}';")
+                # 更新输入框
+                input_widget = path_layout.itemAt(1).widget()
+                if input_widget:
+                    padding = self._scale_size(6)
+                    border_radius_input = self._scale_size(4)
+                    input_widget.setStyleSheet(
+                        f"QLineEdit{{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:{border_radius_input}px;padding:{padding}px;color:white;font-size:{self._scale_size(13)}px;font-family:'{font_family}';}}")
+
+        # 更新颜色标签
+        if hasattr(self.window, 'color_widget'):
+            color_layout = self.window.color_widget.layout()
+            if color_layout and color_layout.count() > 0:
+                label = color_layout.itemAt(0).widget()
+                if label:
+                    label.setStyleSheet(f"color:rgba(255,255,255,0.8);font-size:{self._scale_size(13)}px;font-family:'{font_family}';")
+                # 更新输入框
+                input_widget = color_layout.itemAt(1).widget()
+                if input_widget:
+                    padding = self._scale_size(6)
+                    border_radius_input = self._scale_size(4)
+                    input_widget.setStyleSheet(
+                        f"QLineEdit{{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:{border_radius_input}px;padding:{padding}px;color:white;font-size:{self._scale_size(13)}px;font-family:'{font_family}';}}")
+
+        # 更新字体选择标签
+        if hasattr(self.window, 'font_select_widget'):
+            font_select_layout = self.window.font_select_widget.layout()
+            if font_select_layout and font_select_layout.count() > 0:
+                label = font_select_layout.itemAt(0).widget()
+                if label:
+                    label.setStyleSheet(f"color:rgba(255,255,255,0.8);font-size:{self._scale_size(13)}px;font-family:'{font_family}';")
+
+        # 更新字体路径标签
+        if hasattr(self.window, 'font_path_widget'):
+            font_path_layout = self.window.font_path_widget.layout()
+            if font_path_layout and font_path_layout.count() > 0:
+                label = font_path_layout.itemAt(0).widget()
+                if label:
+                    label.setStyleSheet(f"color:rgba(255,255,255,0.8);font-size:{self._scale_size(13)}px;font-family:'{font_family}';")
+                # 更新输入框
+                input_widget = font_path_layout.itemAt(1).widget()
+                if input_widget:
+                    padding = self._scale_size(6)
+                    border_radius_input = self._scale_size(4)
+                    input_widget.setStyleSheet(
+                        f"QLineEdit{{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:{border_radius_input}px;padding:{padding}px;color:white;font-size:{self._scale_size(13)}px;font-family:'{font_family}';}}")
+
+        # 更新语言标签
+        if hasattr(self.window, 'language_content_layout'):
+            if self.window.language_content_layout.count() > 0:
+                language_widget = self.window.language_content_layout.itemAt(0).widget()
+                if language_widget and language_widget.layout():
+                    label = language_widget.layout().itemAt(0).widget()
+                    if label:
+                        label.setStyleSheet(f"color:rgba(255,255,255,0.8);font-size:{self._scale_size(13)}px;font-family:'{font_family}';")
+
+    def _update_expandable_menu_font(self, container, font_family):
+        """更新可展开菜单的字体"""
+        header = container.layout().itemAt(0).widget()
+        if header and header.layout():
+            header_layout = header.layout()
+            # 查找文本布局
+            for i in range(header_layout.count()):
+                item = header_layout.itemAt(i)
+                if item and isinstance(item.layout(), QVBoxLayout):
+                    text_layout = item.layout()
+                    # 第一个是标题，第二个是描述
+                    if text_layout.count() >= 2:
+                        title = text_layout.itemAt(0).widget()
+                        desc = text_layout.itemAt(1).widget()
+                        title.setStyleSheet(f"color:white;font-size:{self._scale_size(14)}px;font-family:'{font_family}';background:transparent;")
+                        desc.setStyleSheet(f"color:rgba(255,255,255,0.6);font-size:{self._scale_size(12)}px;font-family:'{font_family}';background:transparent;")
+                        break
+
+    def _update_bg_card_font(self, card, font_family):
+        """更新卡片字体的样式"""
+        if not card or not card.layout():
+            return
+
+        card_layout = card.layout()
+        if card_layout.count() >= 2:
+            text_container = card_layout.itemAt(1).layout()
+            if text_container and text_container.count() >= 2:
+                title = text_container.itemAt(0).widget()
+                desc = text_container.itemAt(1).widget()
+                title.setStyleSheet(f"color:white;font-size:{self._scale_size(14)}px;font-family:'{font_family}';background:transparent;")
+                desc.setStyleSheet(f"color:rgba(255,255,255,0.6);font-size:{self._scale_size(12)}px;font-family:'{font_family}';background:transparent;")
+
     def _update_bg_card(self, card, title_key, desc_key):
         """更新背景卡片的文本"""
         if not card or not card.layout():
             return
-        
+
         card_layout = card.layout()
         if card_layout.count() >= 2:
             text_container = card_layout.itemAt(1).layout()
