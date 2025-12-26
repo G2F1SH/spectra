@@ -12,7 +12,7 @@ from BlurWindow.blurWindow import blur
 
 from styles import STYLE_BTN, STYLE_BTN_ACTIVE
 from utils import load_svg_icon, scale_icon_for_display
-from managers import ConfigManager, BackgroundManager
+from managers import ConfigManager, BackgroundManager, LanguageManager
 from ui import UIBuilder
 
 
@@ -24,13 +24,14 @@ class Window(QWidget):
         self.config_manager = ConfigManager()
         self.config = self.config_manager.config
         self.bg_manager = BackgroundManager(self)
+        self.language_manager = LanguageManager()
 
         self.dpi_scale = self._get_system_dpi_scale()
 
         self.ui_builder = UIBuilder(self)
         self.edge_size = self.ui_builder._scale_size(8)
 
-        self.setWindowTitle("Spectra")
+        self.setWindowTitle(self.language_manager.translate("app_title"))
         if os.path.exists("icon.png"):
             from PyQt6.QtGui import QIcon
             self.setWindowIcon(QIcon("icon.png"))
@@ -164,7 +165,7 @@ class Window(QWidget):
         menu_icon = load_svg_icon("svg/chevron-bar-right.svg", self.dpi_scale)
         menu_icon_active = load_svg_icon("svg/chevron-bar-left.svg", self.dpi_scale)
         menu_btn_container = self.ui_builder.create_nav_btn(
-            menu_icon if menu_icon else "\uE700", "收起", self.toggle_sidebar,
+            menu_icon if menu_icon else "\uE700", self.language_manager.translate("nav_collapse"), self.toggle_sidebar,
             None, "svg/chevron-bar-right.svg", "svg/chevron-bar-left.svg"
         )
         self.menu_icon_label = menu_btn_container.findChild(QLabel, "nav_icon")
@@ -173,21 +174,21 @@ class Window(QWidget):
         home_icon = load_svg_icon("svg/houses.svg", self.dpi_scale)
         home_icon_active = load_svg_icon("svg/houses-fill.svg", self.dpi_scale)
         sb.addWidget(self.ui_builder.create_nav_btn(
-            home_icon if home_icon else "\uE80F", "主页",
+            home_icon if home_icon else "\uE80F", self.language_manager.translate("nav_home"),
             lambda: self.switch_page(0), 0, "svg/houses.svg", "svg/houses-fill.svg"
         ))
 
         instance_icon = load_svg_icon("svg/kanban.svg")
         instance_icon_active = load_svg_icon("svg/kanban-fill.svg")
         sb.addWidget(self.ui_builder.create_nav_btn(
-            instance_icon if instance_icon else "\uE7A8", "实例",
+            instance_icon if instance_icon else "\uE7A8", self.language_manager.translate("nav_instances"),
             lambda: self.switch_page(1), 1, "svg/kanban.svg", "svg/kanban-fill.svg"
         ))
 
         download_icon = load_svg_icon("svg/arrow-down-circle.svg")
         download_icon_active = load_svg_icon("svg/arrow-down-circle-fill.svg")
         sb.addWidget(self.ui_builder.create_nav_btn(
-            download_icon if download_icon else "\uE7A8", "下载",
+            download_icon if download_icon else "\uE7A8", self.language_manager.translate("nav_downloads"),
             lambda: self.switch_page(2), 2, "svg/arrow-down-circle.svg", "svg/arrow-down-circle-fill.svg"
         ))
 
@@ -196,7 +197,7 @@ class Window(QWidget):
         settings_icon = load_svg_icon("svg/gear.svg", self.dpi_scale)
         settings_icon_active = load_svg_icon("svg/gear-fill.svg", self.dpi_scale)
         sb.addWidget(self.ui_builder.create_nav_btn(
-            settings_icon if settings_icon else "\uE713", "设置",
+            settings_icon if settings_icon else "\uE713", self.language_manager.translate("nav_settings"),
             lambda: self.switch_page(3), 3, "svg/gear.svg", "svg/gear-fill.svg"
         ))
 
@@ -319,6 +320,38 @@ class Window(QWidget):
             content.setVisible(False)
         else:
             content.setVisible(True)
+    
+    def change_language(self, index):
+        """切换语言"""
+        languages = self.language_manager.get_all_languages()
+        if 0 <= index < len(languages):
+            lang_code = languages[index][0]
+            self.language_manager.set_language(lang_code)
+            self.update_ui_language()
+    
+    def update_ui_language(self):
+        """更新界面语言"""
+        # 更新窗口标题
+        self.setWindowTitle(self.language_manager.translate("app_title"))
+        
+        # 更新导航栏文本
+        nav_texts = [
+            self.language_manager.translate("nav_collapse"),
+            self.language_manager.translate("nav_home"),
+            self.language_manager.translate("nav_instances"),
+            self.language_manager.translate("nav_downloads"),
+            self.language_manager.translate("nav_settings")
+        ]
+        
+        for i, text_widget in enumerate(self.nav_texts):
+            if i < len(nav_texts):
+                text_widget.setText(nav_texts[i])
+        
+        # 更新页面标题
+        self.ui_builder._update_page_titles()
+        
+        # 更新设置页面内容
+        self.ui_builder._update_settings_page()
 
     def set_background(self, mode):
         self.config["background_mode"] = mode

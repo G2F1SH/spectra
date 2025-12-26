@@ -1,6 +1,30 @@
+# Build
 /build/
+/dist/
+
+# Spec
 /main.spec
-/dist
+
+# Virtual Environment
 /.venv/
+
+# Config
 /config.json
-/__pycache__
+
+# Python Cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db

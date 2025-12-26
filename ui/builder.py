@@ -222,13 +222,15 @@ class UIBuilder:
         pl.setContentsMargins(self._scale_size(20), self._scale_size(10), self._scale_size(20), self._scale_size(20))
         pl.setSpacing(self._scale_size(15))
 
-        title = QLabel("设置")
+        title = QLabel(self.window.language_manager.translate("page_settings"))
         title.setStyleSheet(f"color:white;font-size:{self._scale_size(20)}px;font-family:'微软雅黑';font-weight:bold;")
         pl.addWidget(title)
 
         # 外观设置容器
         self.window.appearance_container = self.create_expandable_menu(
-            "外观设置", "背景、主题等外观选项", "svg/palette.svg", "svg/palette-fill.svg",
+            self.window.language_manager.translate("settings_appearance"),
+            self.window.language_manager.translate("settings_appearance_desc"),
+            "svg/palette.svg", "svg/palette-fill.svg",
             content_attr="appearance"
         )
         pl.addWidget(self.window.appearance_container)
@@ -237,7 +239,8 @@ class UIBuilder:
 
         # 模糊背景卡片
         self.window.blur_card = self.create_bg_card(
-            "模糊背景", "使用系统窗口模糊效果",
+            self.window.language_manager.translate("background_blur"),
+            self.window.language_manager.translate("background_blur_desc"),
             self.window.config.get("background_mode") == "blur",
             lambda: self.window.set_background("blur")
         )
@@ -249,7 +252,8 @@ class UIBuilder:
 
         # 纯色背景卡片
         self.window.solid_card = self.create_bg_card(
-            "纯色背景", "使用纯色作为背景",
+            self.window.language_manager.translate("background_solid"),
+            self.window.language_manager.translate("background_solid_desc"),
             self.window.config.get("background_mode") == "solid",
             lambda: self.window.set_background("solid")
         )
@@ -261,7 +265,8 @@ class UIBuilder:
 
         # 图片背景卡片
         self.window.image_card = self.create_bg_card(
-            "图像背景", "使用图像作为背景",
+            self.window.language_manager.translate("background_image"),
+            self.window.language_manager.translate("background_image_desc"),
             self.window.config.get("background_mode") == "image",
             lambda: self.window.set_background("image")
         )
@@ -275,7 +280,9 @@ class UIBuilder:
 
         # 语言设置容器
         self.window.language_container = self.create_expandable_menu(
-            "语言设置", "选择界面显示语言", "svg/translate.svg", "svg/file-earmark-font.svg",
+            self.window.language_manager.translate("settings_language"),
+            self.window.language_manager.translate("settings_language_desc"),
+            "svg/translate.svg", "svg/file-earmark-font.svg",
             toggle_handler=self.window.toggle_language_menu,
             content_attr="language"
         )
@@ -298,7 +305,7 @@ class UIBuilder:
         pl.setContentsMargins(self._scale_size(20), self._scale_size(10), self._scale_size(20), self._scale_size(20))
         pl.setSpacing(self._scale_size(15))
 
-        title = QLabel("实例")
+        title = QLabel(self.window.language_manager.translate("page_instances"))
         title.setStyleSheet(f"color:white;font-size:{self._scale_size(20)}px;font-family:'微软雅黑';font-weight:bold;")
         pl.addWidget(title)
 
@@ -312,7 +319,7 @@ class UIBuilder:
         pl.setContentsMargins(self._scale_size(20), self._scale_size(10), self._scale_size(20), self._scale_size(20))
         pl.setSpacing(self._scale_size(15))
 
-        title = QLabel("下载")
+        title = QLabel(self.window.language_manager.translate("page_downloads"))
         title.setStyleSheet(f"color:white;font-size:{self._scale_size(20)}px;font-family:'微软雅黑';font-weight:bold;")
         pl.addWidget(title)
 
@@ -328,7 +335,7 @@ class UIBuilder:
         opacity_layout.setSpacing(self._scale_size(4))
 
         opacity_header_layout = QHBoxLayout()
-        opacity_label = QLabel("模糊透明度")
+        opacity_label = QLabel(self.window.language_manager.translate("blur_opacity"))
         opacity_label.setStyleSheet(f"color:rgba(255,255,255,0.8);font-size:{self._scale_size(13)}px;font-family:'微软雅黑';")
         opacity_value = QLabel()
         opacity_value.setText(str(int((self.window.config.get("blur_opacity", 150) - 10) / (255 - 10) * 100)) + "%")
@@ -356,7 +363,7 @@ class UIBuilder:
         path_layout.setContentsMargins(self._scale_size(35), self._scale_size(12), self._scale_size(15), self._scale_size(12))
         path_layout.setSpacing(self._scale_size(10))
 
-        path_label = QLabel("背景图片路径")
+        path_label = QLabel(self.window.language_manager.translate("bg_image_path"))
         path_label.setStyleSheet(f"color:rgba(255,255,255,0.8);font-size:{self._scale_size(13)}px;font-family:'微软雅黑';")
         path_layout.addWidget(path_label)
 
@@ -397,7 +404,7 @@ class UIBuilder:
         color_layout.setContentsMargins(self._scale_size(35), self._scale_size(12), self._scale_size(15), self._scale_size(12))
         color_layout.setSpacing(self._scale_size(10))
 
-        color_label = QLabel("背景颜色 (ARGB)")
+        color_label = QLabel(self.window.language_manager.translate("bg_color"))
         color_label.setStyleSheet(f"color:rgba(255,255,255,0.8);font-size:{self._scale_size(13)}px;font-family:'微软雅黑';")
         color_layout.addWidget(color_label)
 
@@ -446,7 +453,7 @@ class UIBuilder:
         language_layout.setContentsMargins(self._scale_size(35), self._scale_size(12), self._scale_size(15), self._scale_size(12))
         language_layout.setSpacing(self._scale_size(10))
 
-        language_label = QLabel("界面语言")
+        language_label = QLabel(self.window.language_manager.translate("settings_language_label"))
         language_label.setStyleSheet(f"color:rgba(255,255,255,0.8);font-size:{self._scale_size(13)}px;font-family:'微软雅黑';")
         language_layout.addWidget(language_label)
 
@@ -537,22 +544,145 @@ class UIBuilder:
             f"background:none;"
             f"}}"
         )
-        self.window.language_combo.addItems([
-            "简体中文",
-            "English",
-            "日本語",
-            "한국어",
-            "Español",
-            "Français",
-            "Deutsch",
-            "Português",
-            "Русский",
-            "العربية"
-        ])
-        self.window.language_combo.setCurrentIndex(0)
+        # 添加语言选项
+        languages = self.window.language_manager.get_all_languages()
+        for lang_code, display_name in languages:
+            self.window.language_combo.addItem(display_name, lang_code)
+        
+        # 设置当前语言
+        current_lang = self.window.language_manager.get_language()
+        for i in range(self.window.language_combo.count()):
+            if self.window.language_combo.itemData(i) == current_lang:
+                self.window.language_combo.setCurrentIndex(i)
+                break
+        
+        # 连接语言切换事件
+        self.window.language_combo.currentIndexChanged.connect(self.window.change_language)
 
         language_layout.addWidget(self.window.language_combo)
 
         self.window.language_content_layout.addWidget(language_widget)
 
         return language_widget
+    
+    def _update_page_titles(self):
+        """更新页面标题"""
+        # 更新主页标题
+        home_page = self.window.stack.widget(0)
+        if home_page and home_page.layout():
+            title = home_page.layout().itemAt(0).widget()
+            if title:
+                title.setText(self.window.language_manager.translate("page_home"))
+        
+        # 更新实例页面标题
+        instance_page = self.window.stack.widget(1)
+        if instance_page and instance_page.layout():
+            title = instance_page.layout().itemAt(0).widget()
+            if title:
+                title.setText(self.window.language_manager.translate("page_instances"))
+        
+        # 更新下载页面标题
+        download_page = self.window.stack.widget(2)
+        if download_page and download_page.layout():
+            title = download_page.layout().itemAt(0).widget()
+            if title:
+                title.setText(self.window.language_manager.translate("page_downloads"))
+        
+        # 更新设置页面标题
+        settings_page = self.window.stack.widget(3)
+        if settings_page and settings_page.layout():
+            title = settings_page.layout().itemAt(0).widget()
+            if title:
+                title.setText(self.window.language_manager.translate("page_settings"))
+    
+    def _update_settings_page(self):
+        """更新设置页面的文本"""
+        settings_page = self.window.stack.widget(3)
+        if not settings_page or not settings_page.layout():
+            return
+        
+        layout = settings_page.layout()
+        
+        # 更新外观设置容器
+        appearance_header = self.window.appearance_container.layout().itemAt(0).widget()
+        if appearance_header and appearance_header.layout():
+            header_layout = appearance_header.layout()
+            # 查找文本布局
+            for i in range(header_layout.count()):
+                item = header_layout.itemAt(i)
+                if item and isinstance(item.layout(), QVBoxLayout):
+                    text_layout = item.layout()
+                    # 第一个是标题，第二个是描述
+                    if text_layout.count() >= 2:
+                        title = text_layout.itemAt(0).widget()
+                        desc = text_layout.itemAt(1).widget()
+                        title.setText(self.window.language_manager.translate("settings_appearance"))
+                        desc.setText(self.window.language_manager.translate("settings_appearance_desc"))
+                        break
+        
+        # 更新背景卡片
+        self._update_bg_card(self.window.blur_card, "background_blur", "background_blur_desc")
+        self._update_bg_card(self.window.solid_card, "background_solid", "background_solid_desc")
+        self._update_bg_card(self.window.image_card, "background_image", "background_image_desc")
+        
+        # 更新透明度标签
+        if hasattr(self.window, 'opacity_widget'):
+            opacity_layout = self.window.opacity_widget.layout()
+            if opacity_layout and opacity_layout.count() > 0:
+                header_layout = opacity_layout.itemAt(0)
+                if header_layout and isinstance(header_layout, QHBoxLayout):
+                    label = header_layout.itemAt(0).widget()
+                    label.setText(self.window.language_manager.translate("blur_opacity"))
+        
+        # 更新路径标签
+        if hasattr(self.window, 'path_widget'):
+            path_layout = self.window.path_widget.layout()
+            if path_layout and path_layout.count() > 0:
+                label = path_layout.itemAt(0).widget()
+                label.setText(self.window.language_manager.translate("bg_image_path"))
+        
+        # 更新颜色标签
+        if hasattr(self.window, 'color_widget'):
+            color_layout = self.window.color_widget.layout()
+            if color_layout and color_layout.count() > 0:
+                label = color_layout.itemAt(0).widget()
+                label.setText(self.window.language_manager.translate("bg_color"))
+        
+        # 更新语言设置容器
+        language_header = self.window.language_container.layout().itemAt(0).widget()
+        if language_header and language_header.layout():
+            header_layout = language_header.layout()
+            # 查找文本布局
+            for i in range(header_layout.count()):
+                item = header_layout.itemAt(i)
+                if item and isinstance(item.layout(), QVBoxLayout):
+                    text_layout = item.layout()
+                    # 第一个是标题，第二个是描述
+                    if text_layout.count() >= 2:
+                        title = text_layout.itemAt(0).widget()
+                        desc = text_layout.itemAt(1).widget()
+                        title.setText(self.window.language_manager.translate("settings_language"))
+                        desc.setText(self.window.language_manager.translate("settings_language_desc"))
+                        break
+        
+        # 更新语言标签
+        if hasattr(self.window, 'language_content_layout'):
+            if self.window.language_content_layout.count() > 0:
+                language_widget = self.window.language_content_layout.itemAt(0).widget()
+                if language_widget and language_widget.layout():
+                    label = language_widget.layout().itemAt(0).widget()
+                    label.setText(self.window.language_manager.translate("settings_language_label"))
+    
+    def _update_bg_card(self, card, title_key, desc_key):
+        """更新背景卡片的文本"""
+        if not card or not card.layout():
+            return
+        
+        card_layout = card.layout()
+        if card_layout.count() >= 2:
+            text_container = card_layout.itemAt(1).layout()
+            if text_container and text_container.count() >= 2:
+                title = text_container.itemAt(0).widget()
+                desc = text_container.itemAt(1).widget()
+                title.setText(self.window.language_manager.translate(title_key))
+                desc.setText(self.window.language_manager.translate(desc_key))
