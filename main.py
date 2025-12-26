@@ -20,8 +20,7 @@ from window import Window
 
 
 if __name__ == "__main__":
-    # 禁用 Qt 的高 DPI 自动缩放，使屏幕显示的物理像素与配置一致
-    # 但需要手动处理控件的 DPI 缩放
+    # 禁用 Qt 的高 DPI 自动缩放，使屏幕显示的物理像素与配置一致，但需要手动处理控件的 DPI 缩放
     QApplication.setHighDpiScaleFactorRoundingPolicy(
         Qt.HighDpiScaleFactorRoundingPolicy.PassThrough
     )
