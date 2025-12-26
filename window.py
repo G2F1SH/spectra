@@ -164,7 +164,7 @@ class Window(QWidget):
         menu_icon = load_svg_icon("svg/chevron-bar-right.svg", self.dpi_scale)
         menu_icon_active = load_svg_icon("svg/chevron-bar-left.svg", self.dpi_scale)
         menu_btn_container = self.ui_builder.create_nav_btn(
-            menu_icon if menu_icon else "\uE700", "菜单", self.toggle_sidebar,
+            menu_icon if menu_icon else "\uE700", "收起", self.toggle_sidebar,
             None, "svg/chevron-bar-right.svg", "svg/chevron-bar-left.svg"
         )
         self.menu_icon_label = menu_btn_container.findChild(QLabel, "nav_icon")
